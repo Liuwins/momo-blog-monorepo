@@ -1,5 +1,5 @@
 import { IsOptional, IsString, MaxLength, Validate } from 'class-validator';
-import { SafeMediaReferenceConstraint } from '../posts/dto';
+import { SafeMediaReferenceConstraint } from '../../common/validators/media-reference';
 
 export class UpdateProfileDto {
   @IsOptional()
