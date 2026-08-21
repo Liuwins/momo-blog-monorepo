@@ -33,6 +33,22 @@ describe('UploadController', () => {
     } as any)).rejects.toBeInstanceOf(HttpException);
   });
 
+  it('拒绝 MIME 声明正确但文件头不匹配的媒体', async () => {
+    await expect(controller.upload([{
+      mimetype: 'image/png',
+      originalname: 'fake.png',
+      buffer: Buffer.from('not-a-png'),
+      size: 9,
+    }] as any)).rejects.toMatchObject({ status: 400 });
+
+    await expect(controller.uploadVideo({
+      mimetype: 'video/mp4',
+      originalname: 'fake.mp4',
+      buffer: Buffer.from('not-an-mp4'),
+      size: 10,
+    } as any)).rejects.toMatchObject({ status: 400 });
+  });
+
   it('保存视频并限制音频文件名中的危险字符', async () => {
     const mp4Header = Buffer.from('000000186674797069736f6d0000020069736f6d69736f32', 'hex');
     const mp3Header = Buffer.from('49443304000000000000', 'hex');

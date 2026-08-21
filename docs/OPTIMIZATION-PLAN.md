@@ -75,7 +75,7 @@
 - 已完成前端 Vitest 配置；
 - 已覆盖全局背景音乐状态、跨路由不重复加载、发布页未登录拦截和有效会话放行，共 5 条测试；
 - 已新增 `.github/workflows/ci.yml`，执行前端 lint/test/build、后端 test/typecheck/build、运维脚本语法检查和高危依赖审计，尚未在 GitHub 远程运行环境验收；
-- 后端已补 Auth、Posts、Comments、Upload、WebSocket、Migration、Health、DTO 和通知去重核心业务回归测试（31 条）；本地测试、类型检查和构建已通过，远程 CI 尚未验收。
+- 后端已补 Auth、Posts、Comments、Upload、WebSocket、Migration、Health、DTO 和通知去重核心业务回归测试（32 条）；本地测试、类型检查和构建已通过，远程 CI 尚未验收。
 - CI 已增加公开仓库敏感/生成文件扫描、Compose 插值校验和恢复脚本语法检查；远程 CI 尚未验收。
 
 验收：
@@ -116,7 +116,7 @@
 - 统计上传文件大小、类型、失败率和清理候选，避免媒体目录无限增长。
 - 对通知、评论计数和点赞计数的并发一致性增加事务或幂等保护；点赞、评论记录与计数已统一到同一事务。
 
-阶段 4 当前进度：批量关联查询、索引 migration、点赞/评论事务一致性、动态流统一序列化、关注关系幂等、查询基准和媒体报告/隔离清理已完成，并通过 31 条后端测试、类型检查和构建；目标服务器真实延迟仍待现场测量。
+阶段 4 当前进度：批量关联查询、索引 migration、点赞/评论事务一致性、动态流统一序列化、关注关系幂等、查询基准和媒体报告/隔离清理已完成，并通过 32 条后端测试、类型检查和构建；目标服务器真实延迟仍待现场测量。
 
 查询基准脚本位于 `momo-blog-server/scripts/query-benchmark.js`，使用内存 SQLite 生成 1000 条动态、6000 条评论和 8000 条点赞，比较旧的逐条关联查询与当前按页批量查询；执行 `npm run benchmark:queries` 可生成 JSON 结果。该基准用于代码回归和相对比较，不代表目标服务器真实延迟。
 
@@ -173,7 +173,7 @@
 - 严格 CSP、Permissions-Policy、Referrer-Policy，以及 MIME、文件头、图片解码和像素上限校验；
 - Issue/PR 模板、变更日志和可重复发布入口。
 
-阶段 6 本地验证：前端 lint、5 条 Vitest、build；后端 31 条 Vitest、typecheck、build；两端高危级别审计通过；隔离端口完整 Compose 和 390×844 浏览器冒烟通过，不能替代目标服务器验收。
+阶段 6 本地验证：前端 lint、5 条 Vitest、build；后端 32 条 Vitest、typecheck、build；两端高危级别审计通过；隔离端口完整 Compose 和 390×844 浏览器冒烟通过，不能替代目标服务器验收。
 
 ## 每阶段固定验证清单
 
