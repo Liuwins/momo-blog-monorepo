@@ -94,6 +94,8 @@ docker compose --project-name momoblog-check -f momo-blog-server/docker-compose.
 
 2026-08-22 隔离端口完整 Compose 验证通过：Node 22 后端和前端镜像均构建成功，backend 为 `healthy`，前端首页、manifest（`application/manifest+json`）、Service Worker、Nginx 代理 `/api/health` 和 Socket.IO polling 均返回成功，CSP/Permissions-Policy/Referrer-Policy 响应头存在。验证使用 `127.0.0.1:39080/39081`，结束后已删除容器、卷和网络；真实域名、HTTPS、目标服务器和真实设备结果仍须按环境重新记录。
 
+同一隔离 Compose 另用临时 seed 账号验证了登录、真实图片上传并通过 `/images/` 读取、编辑历史生成与回滚，以及带 JWT 的 Socket.IO WebSocket 连接；测试账号、媒体和数据库卷均在验证后删除，不涉及生产数据。
+
 ## 5. 非 Docker 部署
 
 非 Docker 只作为需要 systemd/PM2 的服务器方案。后端工作目录为 `momo-blog-server`，监听端口建议仍使用 `3001`；前端构建后由 Nginx 提供静态文件。
