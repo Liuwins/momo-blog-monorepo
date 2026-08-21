@@ -33,6 +33,7 @@
 - 阶段 2 已建立前后端 Vitest 基线：后端 32 条、前端 5 条测试通过，lint、typecheck 和 build 均通过；GitHub Actions 已通过前端、后端和仓库卫生三项门禁（提交 `2aadbaa`，运行 `32505266448`）；
 - 隔离端口的 Node 22 完整 Compose、migration、健康检查、Socket.IO polling、带 JWT 的 WebSocket、真实图片上传/读取、编辑历史回滚、正确的 `webmanifest` MIME 和 390×844 浏览器冒烟已通过；真实生产域名、HTTPS、目标服务器 migration 和备份恢复仍未完成现场验证。
 - NestJS 11 升级后的后端测试 32/32、typecheck、build 和生产依赖审计均通过；隔离 Compose 在 `127.0.0.1:39082/39083` 验证 backend healthy、SPA、manifest 和 Socket.IO 握手，远程 CI 运行 `32506810694` 已通过。
+- 运维加固已通过本地验证：Nginx 首页 MIME 为 `text/html` 且带 `X-Content-Type-Options`，生产冒烟脚本覆盖首页、manifest、health 和 Socket.IO，环境配置新增 3 条回归测试（后端总测试 35 条）。
 
 ### 阶段 2 本轮进度
 
@@ -72,6 +73,7 @@
 - GitHub 远程 CI 已确认公开仓库扫描、Compose 校验和前后端门禁均通过；
 - 阶段 4 已完成动态列表批量关联查询、高频 SQLite 索引、点赞和评论记录/计数事务一致性、查询基准和媒体资源报告；真实服务器指标仍待现场测量；
 - 已通过锁文件和 override 处理前端、后端生产链依赖风险；NestJS 已升级至 11，本地和远程 CI 生产依赖审计均为 0；
+- 已修复 Nginx 自定义 MIME 覆盖、备份成对保护、证书续期失败分支和媒体 URL 清理边界；公开仓库仅保留 `.env.example` 模板；
 - 移动端评论输入、可访问性已完成本地优化；真实设备复测和离线体验仍列入后续评估。
 - 已补充 PWA 静态资源、编辑历史 migration、通知去重字段和媒体文件头校验；阶段 6 本地回归已通过，生产 migration、安装体验和真实媒体上传仍待现场复演。
 

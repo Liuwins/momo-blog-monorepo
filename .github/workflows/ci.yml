@@ -18,7 +18,7 @@ jobs:
       - name: Reject sensitive or generated files
         shell: bash
         run: |
-          matches="$(git ls-files | grep -E '(^|/)(\.env$|.*\.(sqlite|db|log)$|dist/|images/|uploads/|screenshots/)' || true)"
+          matches="$(git ls-files | grep -E '(^|)(\.env($|\.)|.*\.(sqlite|db|log|pem|key|p12|pfx)$|(^|/)(dist|images|uploads|screenshots)(/|$)|.*screenshot\.(png|jpg|jpeg)$)' | grep -Ev '(^|/)\.env\.example$' || true)"
           if [ -n "$matches" ]; then
             echo "敏感或生成文件不允许进入公开仓库："
             printf '%s\n' "$matches"
@@ -31,7 +31,7 @@ jobs:
           SITE_URL: http://localhost
         run: docker compose -f momo-blog-server/docker-compose.yml config --quiet
       - name: Validate operations scripts
-        run: bash -n momo-blog-server/backup.sh momo-blog-server/cleanup-images.sh momo-blog-server/restore-media-quarantine.sh momo-blog-server/cert-check.sh
+        run: bash -n momo-blog-server/backup.sh momo-blog-server/cleanup-images.sh momo-blog-server/restore-media-quarantine.sh momo-blog-server/cert-check.sh momo-blog-server/scripts/production-smoke.sh
 
   frontend:
     name: Frontend checks

@@ -9,11 +9,13 @@ npm ci
 npm run dev
 ```
 
-Vite 固定监听 `5175`，并通过 `VITE_API_TARGET` 代理后端。默认开发配置位于 `.env.development`：
+Vite 固定监听 `5175`，并通过 `VITE_API_TARGET` 代理后端。默认值已内置在 `vite.config.js`；如需显式覆盖，可复制公开示例：
 
-```env
-VITE_API_TARGET=http://localhost:3001
+```powershell
+Copy-Item .env.example .env.development
 ```
+
+`.env.example` 不包含凭据；不要把本地 `.env.development` 或其他环境文件提交到公开仓库。
 
 如需临时切换后端地址，可在启动前设置同名环境变量。不要使用旧的 `VITE_API_URL`，当前配置不读取该变量。
 

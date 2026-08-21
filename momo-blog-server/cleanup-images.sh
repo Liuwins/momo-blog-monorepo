@@ -3,6 +3,7 @@
 # 默认只报告，不删除；确认引用范围后设置 DRY_RUN=0 再执行。
 
 set -euo pipefail
+shopt -s nullglob
 
 IMAGES_DIR="${UPLOAD_DIR:-./images}"
 DB="${DB_PATH:-./data/momoblog.db}"
@@ -52,7 +53,10 @@ REFERENCES=$(sqlite3 "$DB" "
   UNION ALL SELECT avatar FROM users WHERE avatar != ''
   UNION ALL SELECT bgImage FROM users WHERE bgImage != ''
   UNION ALL SELECT bgMusic FROM users WHERE bgMusic != '';
-" | tr ',' '\n' | sed 's|^/images/||' | sort -u)
+" | tr ',' '\n' \
+  | sed -E 's#^[^:]+://[^/]+/images/##; s#^/images/##; s/[?#].*$//' \
+  | sed '/^$/d' \
+  | sort -u)
 
 if [ -z "$REFERENCES" ]; then
   echo "数据库没有媒体引用，将报告所有未忽略媒体项" >> "$LOG"

@@ -92,9 +92,20 @@ Invoke-WebRequest http://127.0.0.1:39080/api/health -TimeoutSec 10
 docker compose --project-name momoblog-check -f momo-blog-server/docker-compose.yml down -v
 ```
 
-2026-08-22 隔离端口完整 Compose 验证通过：Node 22 后端和前端镜像均构建成功，backend 为 `healthy`，前端首页、manifest（`application/manifest+json`）、Service Worker、Nginx 代理 `/api/health` 和 Socket.IO polling 均返回成功，CSP/Permissions-Policy/Referrer-Policy 响应头存在。验证使用 `127.0.0.1:39080/39081`，结束后已删除容器、卷和网络；真实域名、HTTPS、目标服务器和真实设备结果仍须按环境重新记录。
+2026-08-22 隔离端口完整 Compose 验证通过：Node 22 后端和前端镜像均构建成功，backend 为 `healthy`，前端首页（`text/html`）、manifest（`application/manifest+json`）、Service Worker、Nginx 代理 `/api/health` 和 Socket.IO polling 均返回成功，CSP、`X-Content-Type-Options`、Permissions-Policy、Referrer-Policy 响应头存在。验证使用 `127.0.0.1:39080/39081`，结束后已删除容器、卷和网络；真实域名、HTTPS、目标服务器和真实设备结果仍须按环境重新记录。
 
 同一隔离 Compose 另用临时 seed 账号验证了登录、真实图片上传并通过 `/images/` 读取、编辑历史生成与回滚，以及带 JWT 的 Socket.IO WebSocket 连接；测试账号、媒体和数据库卷均在验证后删除，不涉及生产数据。
+
+部署到真实域名后，可执行不带账号和生产数据的基础冒烟检查。脚本默认要求 HTTPS，只检查首页、关键安全响应头、manifest MIME、健康接口和 Socket.IO polling 握手；登录、发布、上传和备份恢复仍需按下面的现场清单单独验证：
+
+```bash
+BASE_URL=https://<实际域名> \
+  ./momo-blog-server/scripts/production-smoke.sh
+
+# 本地 HTTP 临时验证（生产不要关闭 HTTPS 要求）
+BASE_URL=http://127.0.0.1:39080 REQUIRE_HTTPS=0 \
+  ./momo-blog-server/scripts/production-smoke.sh
+```
 
 ## 5. 非 Docker 部署
 
@@ -154,7 +165,7 @@ location /socket.io/ {
 - `node dist/seed.js` 会清空数据，仅允许用于空库演示初始化；必须通过 `SEED_ADMIN_PASSWORD` 注入一次性演示密码，不能使用生产凭据。
 - 执行升级前先备份 SQLite 和上传目录；`backup.sh` 会生成 SQLite 一致性快照 `momoblog.db.<时间>.bak` 和媒体归档 `momoblog-images.<时间>.tar.gz`，恢复时必须同时恢复数据库与媒体文件。
 - Compose 首次启动或版本升级时会在 Nest 应用初始化阶段执行生产 migration；迁移失败不会跳过错误继续提供流量。确认日志中出现应用监听日志且 healthcheck 为 `healthy` 后，才视为迁移完成。
-- `backup.sh`、`cert-check.sh`、`cleanup-images.sh` 和 `restore-media-quarantine.sh` 是参数化部署脚本模板：路径、域名、OSS 凭据和引用扫描范围需按环境审查；媒体清理默认只报告，完成成对备份后设置 `BACKUP_CONFIRMED=1 DRY_RUN=0` 会把候选移入隔离区而非直接删除，可用恢复脚本回滚。
+- `backup.sh`、`cert-check.sh`、`cleanup-images.sh`、`restore-media-quarantine.sh` 和 `scripts/production-smoke.sh` 是参数化部署脚本模板：路径、域名、OSS 凭据和引用扫描范围需按环境审查；数据库或上传目录缺失时备份会失败，媒体清理默认只报告，完成成对备份后设置 `BACKUP_CONFIRMED=1 DRY_RUN=0` 会把候选移入隔离区而非直接删除，可用恢复脚本回滚。
 - 上传接口除 MIME 白名单和大小限制外，还检查文件头、图片真实解码及像素上限；视频/音频容器签名不满足要求时会拒绝。真实服务器仍需用代表性文件复测。
 
 备份恢复演练示例（已在隔离容器验证；目标部署机执行时不要覆盖生产目录）：

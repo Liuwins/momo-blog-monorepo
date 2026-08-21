@@ -24,7 +24,7 @@ MomoBlog 是一个移动端优先、朋友圈风格的个人动态博客。它�
 
 | 子项目 | 分支 | 当前提交 |
 | --- | --- | --- |
-| Monorepo 根 | `master` | 当前包含阶段 1–7 优化；NestJS 11 升级已通过本地回归、隔离 Compose 和 GitHub Actions（运行 `32506810694`） |
+| Monorepo 根 | `master` | 当前包含阶段 1–7 优化；NestJS 11 升级和运维加固已通过本地回归、隔离 Compose 和 GitHub Actions（运行 `32506810694`） |
 | 前端导入基线 | `legacy/frontend-master-20260821` | `425f812`（2026-08-12） |
 | 后端导入基线 | `legacy/server-master-20260821` | `d60173c`（2026-08-12） |
 
@@ -317,6 +317,7 @@ Compose 的 backend 已配置 `/api/health` 健康检查，并要求 frontend �
 | `cert-check.sh` | 证书到期检查与续期 | 通过 `CERT_DOMAINS`、`CERT_ROOT` 和 `CERT_LOG` 注入环境值 |
 | `cleanup-images.sh` | 清理未被数据库引用的媒体目录 | 默认只报告；完成备份并设置 `BACKUP_CONFIRMED=1 DRY_RUN=0` 后移入隔离区，不直接永久删除；覆盖动态图片/视频/配乐、头像、封面和背景音乐 |
 | `restore-media-quarantine.sh` | 恢复媒体清理隔离区 | 指定 `RESTORE_RUN` 并确认备份后恢复，目标已存在时中止 |
+| `scripts/production-smoke.sh` | 线上基础可用性检查 | 只读取公开首页、关键安全头、manifest、health 和 Socket.IO polling；生产默认要求 HTTPS，不读取账号或上传数据 |
 
 ## 10. 安全与可靠性措施
 
@@ -330,7 +331,7 @@ Compose 的 backend 已配置 `/api/health` 健康检查，并要求 frontend �
 - Helmet 安全头已启用；HTTP CORS 使用显式 `CLIENT_ORIGIN`，并开启 credentials。
 - 上传入口同时受 JWT 和管理员守卫保护，校验 MIME、文件大小、文件头、图片真实解码和最大像素数；视频/音频检查基础容器签名，文件名使用随机目录并过滤危险字符。
 - 动态分享页会转义用户文本，降低存储型 XSS 风险；Markdown 渲染端使用 DOMPurify。
-- 前端 Nginx 发布 CSP、Permissions-Policy 和 Referrer-Policy；CSP 使用 `script-src 'self'`，不依赖 `unsafe-inline` 脚本。
+- 前端 Nginx 发布 CSP、`X-Content-Type-Options`、Permissions-Policy 和 Referrer-Policy；CSP 使用 `script-src 'self'`，不依赖 `unsafe-inline` 脚本；自定义 MIME 映射保留 SPA、脚本、样式、图片、字体和 `webmanifest` 类型。
 
 ## 11. 已确认的代码与文档差异 / 风险
 

@@ -13,6 +13,13 @@ if [ -z "$DOMAINS" ]; then
   exit 1
 fi
 
+for command_name in openssl date; do
+  if ! command -v "$command_name" >/dev/null 2>&1; then
+    echo "错误: 未找到必需命令 $command_name" >&2
+    exit 1
+  fi
+done
+
 mkdir -p "$(dirname "$LOG")"
 
 for domain in $DOMAINS; do
@@ -32,12 +39,17 @@ for domain in $DOMAINS; do
 
   if [ "$DAYS_LEFT" -le "$THRESHOLD_DAYS" ]; then
     echo "$(date '+%F %T') [RENEW] $domain 续期证书..." >> $LOG
-    certbot renew --quiet --non-interactive >> $LOG 2>&1
-    if [ $? -eq 0 ]; then
+    if certbot renew --quiet --non-interactive >> "$LOG" 2>&1; then
       echo "$(date '+%F %T') [OK] $domain 续期成功" >> $LOG
-      systemctl reload nginx
+      if systemctl reload nginx >> "$LOG" 2>&1; then
+        echo "$(date '+%F %T') [OK] Nginx 已重新加载" >> "$LOG"
+      else
+        echo "$(date '+%F %T') [FAIL] Nginx 重新加载失败" >> "$LOG"
+        exit 1
+      fi
     else
-      echo "$(date '+%F %T') [FAIL] $domain 续期失败!" >> $LOG
+      echo "$(date '+%F %T') [FAIL] $domain 续期失败" >> "$LOG"
+      exit 1
     fi
   fi
 done

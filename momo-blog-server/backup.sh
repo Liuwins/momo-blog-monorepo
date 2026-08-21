@@ -10,6 +10,15 @@ OSS_ENDPOINT="${OSS_ENDPOINT:-}"
 OSS_BUCKET="${OSS_BUCKET:-}"
 mkdir -p "$BACKUP_DIR"
 
+if [ ! -f "$DB_PATH" ]; then
+  echo "错误: SQLite 数据库不存在: $DB_PATH" >&2
+  exit 1
+fi
+if [ ! -d "$UPLOAD_DIR" ]; then
+  echo "错误: 上传目录不存在，无法创建数据库与媒体成对备份: $UPLOAD_DIR" >&2
+  exit 1
+fi
+
 DATE=$(date +%Y%m%d_%H%M)
 BACKUP_FILE="$BACKUP_DIR/momoblog.db.$DATE.bak"
 MEDIA_BACKUP_FILE="$BACKUP_DIR/momoblog-images.$DATE.tar.gz"
@@ -33,12 +42,8 @@ fi
 echo "本地备份完成: $BACKUP_FILE"
 
 # 上传目录与数据库必须成对保存，恢复时才能保留媒体引用。
-if [ -d "$UPLOAD_DIR" ]; then
-  tar -czf "$MEDIA_BACKUP_FILE" -C "$(dirname "$UPLOAD_DIR")" "$(basename "$UPLOAD_DIR")"
-  echo "媒体备份完成: $MEDIA_BACKUP_FILE"
-else
-  echo "警告: 上传目录不存在，跳过媒体备份: $UPLOAD_DIR" >&2
-fi
+tar -czf "$MEDIA_BACKUP_FILE" -C "$(dirname "$UPLOAD_DIR")" "$(basename "$UPLOAD_DIR")"
+echo "媒体备份完成: $MEDIA_BACKUP_FILE"
 
 # 上传到 OSS（凭据必须由运行环境注入，不从仓库或固定路径读取）
 if [ -n "${ALIYUN_AK_ID:-}" ] && [ -n "${ALIYUN_AK_SECRET:-}" ] && [ -n "$OSS_ENDPOINT" ] && [ -n "$OSS_BUCKET" ]; then
