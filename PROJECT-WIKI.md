@@ -24,7 +24,7 @@ MomoBlog 是一个移动端优先、朋友圈风格的个人动态博客。它�
 
 | 子项目 | 分支 | 当前提交 |
 | --- | --- | --- |
-| Monorepo 根 | `master` | 当前包含阶段 1–7 优化；NestJS 11 升级和运维加固已通过本地回归、隔离 Compose 和 GitHub Actions（运行 `32508220353`） |
+| Monorepo 根 | `master` | 当前包含阶段 1–7 优化；NestJS 11 升级、路由懒加载重试和运维加固已通过本地回归、隔离 Compose 和 GitHub Actions（最新运行 `32509575243`） |
 | 前端导入基线 | `legacy/frontend-master-20260821` | `425f812`（2026-08-12）；远程旧仓库仍公开且未归档，README 迁移链接待确认 |
 | 后端导入基线 | `legacy/server-master-20260821` | `d60173c`（2026-08-12）；远程旧仓库仍公开且未归档，README 迁移链接待确认 |
 

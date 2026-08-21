@@ -76,7 +76,7 @@
 
 - 已完成前端 Vitest 配置；
 - 已覆盖全局背景音乐状态、跨路由不重复加载、发布页未登录拦截和有效会话放行，共 7 条测试；
-- 已新增 `.github/workflows/ci.yml`，执行前端 lint/test/build、后端 test/typecheck/build、运维脚本语法检查和高危依赖审计；GitHub Actions 已在提交 `2aadbaa`（运行 `32505266448`）通过前端、后端和仓库卫生三项门禁。
+- 已新增 `.github/workflows/ci.yml`，执行前端 lint/test/build、后端 test/typecheck/build、运维脚本语法检查和高危依赖审计；最新提交 `f104ff6` 的 GitHub Actions（运行 `32509575243`）已通过前端、后端和仓库卫生三项门禁。
 - 后端已补 Auth、Posts、Comments、Upload、WebSocket、Migration、Health、DTO、环境校验和通知去重回归测试（35 条）；本地与远程测试、类型检查和构建均已通过。
 - CI 已增加公开仓库敏感/生成文件扫描、Compose 插值校验和恢复脚本语法检查；远程结果已验收，Actions 已升级到 v5 以消除 Node 20 运行时警告。
 - 运维脚本已补齐缺失数据库/媒体目录的成对备份保护、证书续期失败处理、空媒体目录兼容和绝对 URL 引用归一化；新增不带凭据的 `scripts/production-smoke.sh`，用于目标域名现场基础检查。
@@ -190,7 +190,7 @@
 - 升级 `@nestjs/common`、`core`、`platform-express`、`platform-socket.io`、`websockets`、`config`、`jwt`、`passport`、`typeorm` 至 NestJS 11 对应版本；
 - 升级 Nest CLI 与 Schematics，刷新后端 `package-lock.json`；
 - 后端 35 条测试、typecheck、build 和官方 npm 生产依赖审计均通过；
-- 使用 Node 22 生产 Compose 在隔离端口 `39080/39081` 验证容器 healthy、`/api/health`、SPA、`manifest.webmanifest`、安全头和 Socket.IO polling 握手；GitHub Actions 运行 `32508220353` 的仓库卫生、前端和后端门禁均通过。
+- 使用 Node 22 生产 Compose 在隔离端口 `39080/39081` 验证容器 healthy、`/api/health`、SPA、`manifest.webmanifest`、安全头和 Socket.IO polling 握手；最新 GitHub Actions 运行 `32509575243` 的仓库卫生、前端和后端门禁均通过。
 - 运维脚本回归通过 `bash -n`；目标服务器仍需执行 `BASE_URL=https://<实际域名> ./momo-blog-server/scripts/production-smoke.sh` 并保留输出记录。
 
 回滚：恢复 `momo-blog-server/package.json` 与 `package-lock.json` 的上一提交即可；数据库迁移和公开 API 未发生变化。目标服务器启动、真实域名 HTTPS、WebSocket、上传和备份恢复仍需分别验收。
