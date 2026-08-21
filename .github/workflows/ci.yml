@@ -31,7 +31,7 @@ jobs:
           SITE_URL: http://localhost
         run: docker compose -f momo-blog-server/docker-compose.yml config --quiet
       - name: Validate operations scripts
-        run: bash -n momo-blog-server/backup.sh momo-blog-server/cleanup-images.sh momo-blog-server/cert-check.sh
+        run: bash -n momo-blog-server/backup.sh momo-blog-server/cleanup-images.sh momo-blog-server/restore-media-quarantine.sh momo-blog-server/cert-check.sh
 
   frontend:
     name: Frontend checks
@@ -56,6 +56,8 @@ jobs:
         run: npm test
       - name: Production build
         run: npm run build
+      - name: Dependency audit
+        run: npm audit --audit-level=high --registry=https://registry.npmjs.org
 
   backend:
     name: Backend checks
@@ -80,3 +82,5 @@ jobs:
         run: npm run typecheck
       - name: Production build
         run: npm run build
+      - name: Production dependency audit
+        run: npm audit --omit=dev --audit-level=high --registry=https://registry.npmjs.org

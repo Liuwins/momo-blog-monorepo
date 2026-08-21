@@ -75,6 +75,8 @@ docker compose -f momo-blog-server/docker-compose.yml ps
 
 非 Docker 只作为需要 systemd/PM2 的服务器方案。后端工作目录为 `momo-blog-server`，监听端口建议仍使用 `3001`；前端构建后由 Nginx 提供静态文件。
 
+运行时使用 Node.js 22（与 CI 和生产镜像保持一致）；当前后端上传类型校验锁定的 `file-type` 补丁版本要求 Node.js 20 或更高版本。
+
 ```powershell
 # 后端
 Set-Location .\momo-blog-server
@@ -87,6 +89,8 @@ Set-Location ..\momo-blog
 npm ci
 npm run build
 ```
+
+依赖安装必须使用仓库锁文件。发布前建议在可联网环境执行 `npm audit --omit=dev --audit-level=high --registry=https://registry.npmjs.org`（后端）和 `npm audit --audit-level=high --registry=https://registry.npmjs.org`（前端）。当前前端审计为 0；后端生产链无高危项，但 Nest 10 仍有中低风险告警，升级 Nest 11 属于独立兼容性项目，不能在部署时执行 `npm audit fix --force`。
 
 Nginx 至少需要以下路由：
 
