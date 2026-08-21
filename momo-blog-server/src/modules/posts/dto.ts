@@ -2,6 +2,7 @@ import {
   ArrayMaxSize,
   ArrayUnique,
   IsArray,
+  IsNotEmpty,
   IsIn,
   IsOptional,
   IsString,
@@ -27,6 +28,12 @@ export class NotEmptyPostConstraint implements ValidatorConstraintInterface {
   defaultMessage() {
     return '文章内容、图片或视频至少填写一个';
   }
+}
+
+function trimTags(value: unknown) {
+  return Array.isArray(value)
+    ? value.map((item) => (typeof item === 'string' ? item.trim() : item))
+    : value;
 }
 
 export class CreatePostDto {
@@ -59,9 +66,11 @@ export class CreatePostDto {
 
   @IsOptional()
   @IsArray()
+  @Transform(({ value }) => trimTags(value))
   @ArrayMaxSize(5, { message: '标签最多 5 个' })
   @ArrayUnique({ message: '标签不能重复' })
   @IsString({ each: true })
+  @IsNotEmpty({ each: true, message: '标签不能为空' })
   @MaxLength(50, { each: true })
   @noComma({ each: true })
   tags?: string[];
@@ -100,9 +109,11 @@ export class UpdatePostDto {
 
   @IsOptional()
   @IsArray()
+  @Transform(({ value }) => trimTags(value))
   @ArrayMaxSize(5, { message: '标签最多 5 个' })
   @ArrayUnique({ message: '标签不能重复' })
   @IsString({ each: true })
+  @IsNotEmpty({ each: true, message: '标签不能为空' })
   @MaxLength(50, { each: true })
   @noComma({ each: true })
   tags?: string[];

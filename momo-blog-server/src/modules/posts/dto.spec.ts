@@ -59,4 +59,14 @@ describe('CreatePostDto', () => {
     const invalid = plainToInstance(QueryPostsDto, { tag: '生活,隐私' });
     expect((await validate(invalid)).some((error) => error.property === 'tag')).toBe(true);
   });
+
+  it('写入动态前去除标签空格并拒绝空标签', async () => {
+    const dto = plainToInstance(CreatePostDto, {
+      content: '内容',
+      tags: [' 生活 ', ''],
+    });
+
+    expect(dto.tags).toEqual(['生活', '']);
+    expect((await validate(dto)).some((error) => error.property === 'tags')).toBe(true);
+  });
 });
