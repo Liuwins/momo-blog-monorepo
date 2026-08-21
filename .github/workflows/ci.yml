@@ -30,6 +30,8 @@ jobs:
           CLIENT_ORIGIN: http://localhost
           SITE_URL: http://localhost
         run: docker compose -f momo-blog-server/docker-compose.yml config --quiet
+      - name: Validate operations scripts
+        run: bash -n momo-blog-server/backup.sh momo-blog-server/cleanup-images.sh momo-blog-server/cert-check.sh
 
   frontend:
     name: Frontend checks

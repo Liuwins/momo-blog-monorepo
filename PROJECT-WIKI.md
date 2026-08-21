@@ -11,7 +11,7 @@ MomoBlog 是一个移动端优先、朋友圈风格的个人动态博客。它�
 当前工作区是一个统一的 Monorepo；前后端目录保留各自的 npm 项目边界，但共享根 Git 历史：
 
 ```text
-pyq-opencode/
+项目根目录/
 ├── .git/                      # 唯一 Git 仓库
 ├── momo-blog/                 # Vue 3 前端
 ├── momo-blog-server/          # NestJS 后端
@@ -309,9 +309,9 @@ Compose 的 backend 已配置 `/api/health` 健康检查，并要求 frontend �
 
 | 脚本 | 作用 | 使用前注意事项 |
 | --- | --- | --- |
-| `backup.sh` | SQLite 备份、保留 7 天、可上传 OSS | 通过环境变量注入路径、OSS endpoint/bucket 和凭据；未配置 OSS 时只保留本地备份 |
+| `backup.sh` | SQLite 一致性备份、媒体归档、保留 7 天、可上传 OSS | 通过环境变量注入数据库/上传/备份路径、OSS endpoint/bucket 和凭据；未配置 OSS 时只保留本地成对备份，配置 OSS 时数据库与媒体归档一起上传 |
 | `cert-check.sh` | 证书到期检查与续期 | 通过 `CERT_DOMAINS`、`CERT_ROOT` 和 `CERT_LOG` 注入环境值 |
-| `cleanup-images.sh` | 清理未被数据库引用的媒体目录 | 默认只报告不删除；有引用范围缺口，见第 11 节，未经核对不要设置 `DRY_RUN=0` |
+| `cleanup-images.sh` | 清理未被数据库引用的媒体目录 | 默认只报告不删除；覆盖动态图片/视频/配乐、头像、封面和背景音乐；未经核对不要设置 `DRY_RUN=0` |
 
 ## 10. 安全与可靠性措施
 
@@ -336,7 +336,7 @@ Compose 的 backend 已配置 `/api/health` 健康检查，并要求 frontend �
 | 已处理 | Docker Compose 曾将 `3001:3001` 暴露到宿主机，而部署基线要求后端不对外暴露 | API 可绕开前端 Nginx 直接访问 | 已改为默认 `127.0.0.1:${BACKEND_HOST_PORT:-3001}:3001`；仅在确认额外边界后调整 |
 | 已处理 | 公开快照包含两个重复的初始化 migration，空库执行会在第二个 migration 创建已存在的 `comments` 表并失败 | 生产首次部署可能在迁移阶段失败 | 重复 migration 已改为兼容性 no-op；在内存 SQLite 空库和临时生产容器上验证三条 migration 可完整回放 |
 | 已处理 | Compose 只按容器启动顺序启动 frontend，健康接口即使数据库查询失败也返回 HTTP 200 | 迁移失败或数据库锁定时可能被误判为已部署 | backend 增加 healthcheck，frontend 等待 `service_healthy`；数据库异常返回 HTTP 503 |
-| 中 | `cleanup-images.sh` 只收集 `posts.images` 与 `users.avatar` 的引用 | 视频、动态配乐、背景图、背景音乐等仍在使用的文件可能被误删 | 扩展引用扫描范围，并保持默认只报告模式 |
+| 已处理 | `cleanup-images.sh` 只收集 `posts.images` 与 `users.avatar` 的引用 | 视频、动态配乐、背景图、背景音乐等仍在使用的文件可能被误删 | 已扩展到 videos/music/avatar/bgImage/bgMusic，并保持默认只报告模式 |
 | 已处理 | 前端/后端旧 `ROADMAP.md` 曾写“通知中心 UI 未接”，但当前已有 `Notifications.vue`、通知 Pinia Store 和 Socket.IO 连接代码 | 旧路线图会误导维护 | 已收敛到根 `ROADMAP.md`，子项目文件改为入口说明 |
 | 已处理 | `GET /api/users/:id/posts` 会查询 `p.music`，但正常创建流程不写入 `music` | 个人页与首页的动态模型可能出现字段能力不一致 | 已随动态配乐修复统一创建、更新及各查询返回；阶段 2 仍需补回归测试 |
 | 已处理 | 前端配置了 Vitest，项目中未发现测试源码；后端没有测试脚本 | 关键鉴权、上传、审核和迁移缺少回归保护 | 已补前后端测试与 CI 基线；真实 GitHub CI、上传现场、WebSocket 现场和备份恢复仍需部署环境验收 |

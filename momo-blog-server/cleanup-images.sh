@@ -20,15 +20,19 @@ mkdir -p "$(dirname "$LOG")"
 
 echo "$(date '+%Y-%m-%d %H:%M:%S') 开始清理..." >> "$LOG"
 
-# 收集所有引用的图片路径（/posts 里的 /images/xxx）
+# 收集所有媒体引用（动态图片/视频/配乐、头像、封面和背景音乐）。
+# simple-array 字段以逗号保存，统一拆分后再与 images 根目录下的随机目录比较。
 REFERENCES=$(sqlite3 "$DB" "
-  SELECT images FROM posts WHERE images != '';
-  SELECT avatar FROM users WHERE avatar != '';
+  SELECT images FROM posts WHERE images != ''
+  UNION ALL SELECT videos FROM posts WHERE videos != ''
+  UNION ALL SELECT music FROM posts WHERE music != ''
+  UNION ALL SELECT avatar FROM users WHERE avatar != ''
+  UNION ALL SELECT bgImage FROM users WHERE bgImage != ''
+  UNION ALL SELECT bgMusic FROM users WHERE bgMusic != '';
 " | tr ',' '\n' | sed 's|^/images/||' | sort -u)
 
 if [ -z "$REFERENCES" ]; then
-  echo "没有引用，跳过" >> "$LOG"
-  exit 0
+  echo "数据库没有媒体引用，将报告所有未忽略媒体项" >> "$LOG"
 fi
 
 # 统计
