@@ -1,4 +1,5 @@
-import { IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsOptional, IsString, MaxLength, Validate } from 'class-validator';
+import { SafeMediaReferenceConstraint } from '../posts/dto';
 
 export class UpdateProfileDto {
   @IsOptional()
@@ -9,6 +10,7 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsString()
   @MaxLength(100)
+  @Validate(SafeMediaReferenceConstraint, [{ allowEmpty: true }])
   avatar?: string;
 
   @IsOptional()
@@ -19,10 +21,12 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsString()
   @MaxLength(200)
+  @Validate(SafeMediaReferenceConstraint, [{ allowEmpty: true }])
   bgImage?: string;
 
   @IsOptional()
   @IsString()
   @MaxLength(500)
+  @Validate(SafeMediaReferenceConstraint, [{ allowEmpty: true }])
   bgMusic?: string;
 }

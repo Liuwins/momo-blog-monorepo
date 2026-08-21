@@ -68,6 +68,16 @@ grep -Eiq '^content-type:.*application/manifest\+json' "$TMP_DIR/headers" || {
   exit 1
 }
 
+request "$BASE_URL/sw.js"
+grep -Eiq '^content-type:.*(javascript|ecmascript)' "$TMP_DIR/headers" || {
+  echo "Service Worker 的 Content-Type 不是 JavaScript" >&2
+  exit 1
+}
+grep -q 'CACHE_NAME' "$TMP_DIR/body" || {
+  echo "Service Worker 内容不完整" >&2
+  exit 1
+}
+
 request "$BASE_URL/api/health"
 grep -q '"status"[[:space:]]*:[[:space:]]*"ok"' "$TMP_DIR/body" || {
   echo "健康检查未返回 status=ok" >&2

@@ -96,7 +96,7 @@ docker compose --project-name momoblog-check -f momo-blog-server/docker-compose.
 
 同一隔离 Compose 另用临时 seed 账号验证了登录、真实图片上传并通过 `/images/` 读取、编辑历史生成与回滚，以及带 JWT 的 Socket.IO WebSocket 连接；测试账号、媒体和数据库卷均在验证后删除，不涉及生产数据。
 
-部署到真实域名后，可执行不带账号和生产数据的基础冒烟检查。脚本默认要求 HTTPS，只检查首页、关键安全响应头、manifest MIME、健康接口和 Socket.IO polling 握手；登录、发布、上传和备份恢复仍需按下面的现场清单单独验证：
+部署到真实域名后，可执行不带账号和生产数据的基础冒烟检查。脚本默认要求 HTTPS，检查首页、关键安全响应头、manifest 和 Service Worker MIME/内容、健康接口和 Socket.IO polling 握手；登录、发布、上传和备份恢复仍需按下面的现场清单单独验证：
 
 ```bash
 BASE_URL=https://<实际域名> \

@@ -5,8 +5,16 @@
       :key="comment.id"
       class="comment-preview"
     >
-      <div class="comment-preview-main" @click="$emit('reply', comment)">
-        <span class="comment-nickname">{{ comment.user?.nickname || '未知用户' }}</span>
+      <div
+        class="comment-preview-main"
+        role="button"
+        tabindex="0"
+        :aria-label="`回复 ${comment.nickname || comment.user?.nickname || '匿名'} 的评论`"
+        @click="$emit('reply', comment)"
+        @keydown.enter.prevent="$emit('reply', comment)"
+        @keydown.space.prevent="$emit('reply', comment)"
+      >
+        <span class="comment-nickname">{{ comment.nickname || comment.user?.nickname || '匿名' }}</span>
         <template v-if="comment.replyTo">
           <span class="comment-reply">回复</span>
           <span class="comment-nickname">@{{ comment.replyTo.nickname }}</span>

@@ -24,4 +24,29 @@ describe('CreatePostDto', () => {
 
     expect(errors).toHaveLength(0);
   });
+
+  it('只允许安全的媒体 URL 或同源路径', async () => {
+    const dto = new CreatePostDto();
+    dto.content = '内容';
+    dto.images = ['/images/photo.webp', 'https://cdn.example.com/photo.webp'];
+    dto.videos = ['javascript:alert(1)'];
+    dto.music = '';
+
+    const errors = await validate(dto);
+
+    expect(errors.some((error) => error.property === 'videos')).toBe(true);
+    expect(errors.some((error) => error.property === 'music')).toBe(false);
+  });
+
+  it('拒绝会破坏 simple-array 序列化的逗号和路径穿越', async () => {
+    const dto = new CreatePostDto();
+    dto.content = '内容';
+    dto.images = ['/images/../secret.webp'];
+    dto.tags = ['生活,隐私'];
+
+    const errors = await validate(dto);
+
+    expect(errors.some((error) => error.property === 'images')).toBe(true);
+    expect(errors.some((error) => error.property === 'tags')).toBe(true);
+  });
 });

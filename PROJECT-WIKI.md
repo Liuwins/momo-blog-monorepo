@@ -317,7 +317,7 @@ Compose 的 backend 已配置 `/api/health` 健康检查，并要求 frontend �
 | `cert-check.sh` | 证书到期检查与续期 | 通过 `CERT_DOMAINS`、`CERT_ROOT` 和 `CERT_LOG` 注入环境值 |
 | `cleanup-images.sh` | 清理未被数据库引用的媒体目录 | 默认只报告；完成备份并设置 `BACKUP_CONFIRMED=1 DRY_RUN=0` 后移入隔离区，不直接永久删除；覆盖动态图片/视频/配乐、头像、封面和背景音乐 |
 | `restore-media-quarantine.sh` | 恢复媒体清理隔离区 | 指定 `RESTORE_RUN` 并确认备份后恢复，目标已存在时中止 |
-| `scripts/production-smoke.sh` | 线上基础可用性检查 | 只读取公开首页、关键安全头、manifest、health 和 Socket.IO polling；生产默认要求 HTTPS，不读取账号或上传数据 |
+| `scripts/production-smoke.sh` | 线上基础可用性检查 | 只读取公开首页、关键安全头、manifest、Service Worker、health 和 Socket.IO polling；生产默认要求 HTTPS，不读取账号或上传数据 |
 
 ## 10. 安全与可靠性措施
 
@@ -330,6 +330,7 @@ Compose 的 backend 已配置 `/api/health` 健康检查，并要求 frontend �
 - 密码使用 bcrypt（10 轮）哈希；用户对外响应会剔除 `password`。
 - Helmet 安全头已启用；HTTP CORS 使用显式 `CLIENT_ORIGIN`，并开启 credentials。
 - 上传入口同时受 JWT 和管理员守卫保护，校验 MIME、文件大小、文件头、图片真实解码和最大像素数；视频/音频检查基础容器签名，文件名使用随机目录并过滤危险字符。
+- 动态图片/视频/配乐及用户头像、封面、背景音乐字段只接受同源路径或 `http(s)` URL，拒绝危险协议、路径穿越、控制字符和会破坏 `simple-array` 的逗号。
 - 动态分享页会转义用户文本，降低存储型 XSS 风险；Markdown 渲染端使用 DOMPurify。
 - 前端 Nginx 发布 CSP、`X-Content-Type-Options`、Permissions-Policy 和 Referrer-Policy；CSP 使用 `script-src 'self'`，不依赖 `unsafe-inline` 脚本；自定义 MIME 映射保留 SPA、脚本、样式、图片、字体和 `webmanifest` 类型。
 - 路由懒加载通过 `src/router/lazy.js` 做一次延迟重试；首次 chunk 请求失败会重试一次，连续失败仍交给统一路由错误提示。
@@ -389,7 +390,7 @@ Compose 的 backend 已配置 `/api/health` 健康检查，并要求 frontend �
 ## 14. 本次分析的验证范围
 
 - 已完成静态审阅：Monorepo 目录、依赖锁文件、配置、路由、前端 API、状态管理、控制器、服务、实体、迁移、Docker/Nginx 和运维脚本。
-- 本地自动化验证：前端测试 7/7、lint 0 error/0 warning、build 通过；后端（NestJS 11）测试 35/35、typecheck/build 通过；Compose 插值和 Bash 脚本语法通过；前端及后端官方 npm 生产依赖审计均为 0。
+- 本地自动化验证：前端测试 19/19、lint 0 error/0 warning、build 通过；后端（NestJS 11）测试 39/39、typecheck/build 通过；Compose 插值和 Bash 脚本语法通过；前端及后端官方 npm 生产依赖审计均为 0。
 - 本地运行验证：Node 22 前后端生产镜像、NestJS 11 隔离端口 Compose（前端 `39082`、后端 `39083`）、migration、backend `healthy`、SPA、`application/manifest+json` manifest、Socket.IO polling 握手均已通过；此前查询基准、媒体报告和隔离恢复演练通过；390×844 浏览器首页冒烟通过，控制台错误数为 0。
 - 未完成：真实域名/HTTPS、目标服务器 migration、目标服务器 WebSocket/大文件上传、目标服务器备份恢复和真实 PWA 安装；GitHub 远程 CI 已通过，本地隔离环境验证不替代目标服务器现场验证。
 
