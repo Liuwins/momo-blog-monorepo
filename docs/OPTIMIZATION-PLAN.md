@@ -77,7 +77,7 @@
 当前进度（2026-08-22）：
 
 - 已完成前端 Vitest 配置；
-- 已覆盖请求拦截器、用户会话恢复、全局背景音乐状态、跨路由不重复加载、发布页未登录拦截/有效会话放行、发布 payload 和评论交互，共 19 条测试；前端测试脚本已移除 `--passWithNoTests`，测试目录缺失会直接失败。
+- 已覆盖请求拦截器、用户会话恢复、全局背景音乐状态、跨路由不重复加载、发布页未登录拦截/有效会话放行、发布 payload、评论交互和生产 CSP，共 21 条测试；前端测试脚本已移除 `--passWithNoTests`，测试目录缺失会直接失败。
 - 已新增 `.github/workflows/ci.yml`，执行前端 lint/test/build、后端 test/typecheck/build、运维脚本语法检查和高危依赖审计；代码提交 `9fb8fc7` 的 GitHub Actions（运行 `32511440234`）已通过前端、后端和仓库卫生三项门禁，随后公共校验器重构的回归运行 `32511825831` 也已通过。
 - 后端已补 Auth、Posts、Comments、Upload、WebSocket、Migration、Health、DTO、环境校验、媒体引用、路径 ID、评论关联 ID、游客标识、标签边界和关键词通配符校验、通知去重回归测试（53 条）；本地与远程测试、类型检查和构建均已通过。
 - CI 已增加公开仓库敏感/生成文件扫描、Compose 插值校验和恢复脚本语法检查；远程结果已验收，Actions 已升级到 v5 以消除 Node 20 运行时警告。
@@ -181,10 +181,10 @@
 - PWA manifest、图标和生产 Service Worker；
 - 动态编辑历史、当前快照保存和回滚接口/界面；
 - 点赞、评论、回复通知去重及回复目标边界校验；
-- 严格 CSP、Permissions-Policy、Referrer-Policy，以及 MIME、文件头、图片解码和像素上限校验；
+- 严格 CSP、Permissions-Policy、Referrer-Policy（包含天气与一言的最小明确接口白名单），以及 MIME、文件头、图片解码和像素上限校验；
 - Issue/PR 模板、变更日志和可重复发布入口。
 
-阶段 6 本地验证：前端 lint、19 条 Vitest、build；后端 53 条 Vitest、typecheck、build；两端高危级别审计通过；隔离端口完整 Compose 和 390×844 浏览器冒烟通过，不能替代目标服务器验收。
+阶段 6 本地验证：前端 lint、21 条 Vitest、build；后端 53 条 Vitest、typecheck、build；两端高危级别审计通过；隔离端口完整 Compose 和 390×844 浏览器冒烟通过，不能替代目标服务器验收。
 
 ## 阶段 7：NestJS 11 运行时与依赖升级
 

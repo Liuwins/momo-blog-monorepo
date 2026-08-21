@@ -330,7 +330,7 @@ Compose 的 backend 已配置 `/api/health` 健康检查，并要求 frontend �
 - JWT 密钥缺失或少于 16 字符时，后端启动失败；JWT 签发有效期为 7 天。
 - 密码使用 bcrypt（10 轮）哈希；用户对外响应会剔除 `password`。
 - Helmet 安全头已启用；HTTP CORS 使用显式 `CLIENT_ORIGIN`，并开启 credentials。
-- 上传入口同时受 JWT 和管理员守卫保护，校验 MIME、文件大小、文件头、图片真实解码和最大像素数；视频/音频检查基础容器签名，文件名使用随机目录并过滤危险字符。
+- 上传入口同时受 JWT 和管理员守卫保护，校验 MIME、文件大小、文件头、图片真实解码和最大像素数；视频/音频检查基础容器签名，文件名使用随机目录并过滤危险字符。Nginx CSP 同时放行天气和一言的明确接口域名。
 - 动态图片/视频/配乐及用户头像、封面、背景音乐字段只接受同源路径或 `http(s)` URL，拒绝危险协议、路径穿越、控制字符和会破坏 `simple-array` 的逗号。
 - 动态分享页会转义用户文本，降低存储型 XSS 风险；Markdown 渲染端使用 DOMPurify。
 - 前端 Nginx 发布 CSP、`X-Content-Type-Options`、Permissions-Policy 和 Referrer-Policy；CSP 使用 `script-src 'self'`，不依赖 `unsafe-inline` 脚本；自定义 MIME 映射保留 SPA、脚本、样式、图片、字体和 `webmanifest` 类型。
@@ -391,7 +391,7 @@ Compose 的 backend 已配置 `/api/health` 健康检查，并要求 frontend �
 ## 14. 本次分析的验证范围
 
 - 已完成静态审阅：Monorepo 目录、依赖锁文件、配置、路由、前端 API、状态管理、控制器、服务、实体、迁移、Docker/Nginx 和运维脚本。
-- 本地自动化验证：前端测试 19/19、lint 0 error/0 warning、build 通过；后端（NestJS 11）测试 53/53、typecheck/build 通过；仓库卫生脚本、Compose 插值和 Bash 脚本语法通过；前端及后端官方 npm 生产依赖审计均为 0。
+- 本地自动化验证：前端测试 21/21、lint 0 error/0 warning、build 通过；后端（NestJS 11）测试 53/53、typecheck/build 通过；仓库卫生脚本、Compose 插值和 Bash 脚本语法通过；前端及后端官方 npm 生产依赖审计均为 0。
 - 本地运行验证：Node 22 前后端生产镜像、NestJS 11 隔离端口 Compose（前端 `39082`、后端 `39083`）、migration、backend `healthy`、SPA、`application/manifest+json` manifest、Socket.IO polling 握手均已通过；此前查询基准、媒体报告和隔离恢复演练通过；390×844 浏览器首页冒烟通过，控制台错误数为 0。
 - 未完成：真实域名/HTTPS、目标服务器 migration、目标服务器 WebSocket/大文件上传、目标服务器备份恢复和真实 PWA 安装；GitHub 远程 CI 已通过，本地隔离环境验证不替代目标服务器现场验证。
 

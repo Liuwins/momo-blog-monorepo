@@ -31,7 +31,7 @@
 
 - 阶段 1–7 的代码、迁移、回归测试和公开快照治理已补齐；NestJS 11 升级、路由懒加载重试、媒体引用校验和运维加固已在隔离 Compose 和 GitHub Actions 中完成验证（代码变更运行 `32511440234`，重构回归运行 `32511825831`）；
 - 两个旧 GitHub 仓库已在本地禁用 push，但远程仍为公开且未归档，README 迁移链接和 GitHub Archived 设置待用户确认，未擅自修改外部仓库；
-- 阶段 2 已建立前后端 Vitest 基线：后端当前 53 条、前端 19 条测试通过，lint、typecheck 和 build 均通过；本轮新增请求拦截器、会话恢复、发布/评论交互、媒体引用、路径 ID、评论关联 ID、游客标识和查询边界校验；代码提交 `9fb8fc7` 的 GitHub Actions 已通过前端、后端和仓库卫生三项门禁（运行 `32511440234`），随后公共校验器重构的回归运行 `32511825831` 也已通过；
+- 阶段 2 已建立前后端 Vitest 基线：后端当前 53 条、前端 21 条测试通过，lint、typecheck 和 build 均通过；本轮新增请求拦截器、会话恢复、发布/评论交互、媒体引用、路径 ID、评论关联 ID、游客标识、查询边界和生产 CSP 校验；代码提交 `9fb8fc7` 的 GitHub Actions 已通过前端、后端和仓库卫生三项门禁（运行 `32511440234`），随后公共校验器重构的回归运行 `32511825831` 也已通过；
 - 隔离端口的 Node 22 完整 Compose、migration、健康检查、Socket.IO polling、带 JWT 的 WebSocket、真实图片上传/读取、编辑历史回滚、正确的 `webmanifest` MIME 和 390×844 浏览器冒烟已通过；真实生产域名、HTTPS、目标服务器 migration 和备份恢复仍未完成现场验证。
 - NestJS 11 升级后的后端测试 53/53、typecheck、build 和生产依赖审计均通过；隔离 Compose 在 `127.0.0.1:39080/39081` 验证 backend healthy、SPA、manifest、安全头和 Socket.IO 握手，远程 CI 运行 `32511825831` 已通过。
 - 运维加固已通过本地验证：Nginx 首页 MIME 为 `text/html` 且带 `X-Content-Type-Options`，生产冒烟脚本覆盖首页、manifest、health 和 Socket.IO，环境配置新增 3 条回归测试（后端总测试 53 条）。
@@ -39,7 +39,7 @@
 
 ### 阶段 2 本轮进度
 
-- 新增前端 Vitest 配置和 19 条回归测试，覆盖请求拦截器、用户会话、路由守卫、发布 payload、评论交互、音乐状态和懒加载失败重试；
+- 新增前端 Vitest 配置和 21 条回归测试，覆盖请求拦截器、用户会话、路由守卫、发布 payload、评论交互、音乐状态、懒加载失败重试和生产 CSP；
 - 新增后端 Vitest 配置、reflect-metadata 测试初始化和 53 条回归测试，覆盖 Auth、Posts、Comments、Upload、WebSocket、Migration、Health、DTO、环境校验、媒体引用、路径 ID、评论关联 ID、游客标识、查询边界和通知去重；
 - 新增 GitHub Actions，执行前端 lint/test/build 与后端 test/typecheck/build；
 - CI 增加敏感文件/构建产物扫描和 Compose 插值校验；
