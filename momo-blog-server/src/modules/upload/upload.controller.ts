@@ -264,6 +264,7 @@ export class UploadController {
       const originalBase = path.parse(file.originalname).name || 'audio';
       const safeName = originalBase
         .replace(/[/\\:*?"<>|]/g, '_')  // 去除危险字符
+        .replace(/[\u0000-\u001F\u007F]/g, '_') // 去除控制字符，避免非法文件路径
         .replace(/\s+/g, ' ')            // 合并空白
         .trim()
         .substring(0, 60) || 'audio';
