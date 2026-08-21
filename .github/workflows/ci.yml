@@ -15,15 +15,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
       - name: Reject sensitive or generated files
-        shell: bash
-        run: |
-          matches="$(git ls-files | grep -E '(^|)(\.env($|\.)|.*\.(sqlite|db|log|pem|key|p12|pfx)$|(^|/)(dist|images|uploads|screenshots)(/|$)|.*screenshot\.(png|jpg|jpeg)$)' | grep -Ev '(^|/)\.env\.example$' || true)"
-          if [ -n "$matches" ]; then
-            echo "敏感或生成文件不允许进入公开仓库："
-            printf '%s\n' "$matches"
-            exit 1
-          fi
+        run: node scripts/repository-hygiene.mjs
       - name: Validate Compose interpolation
         env:
           JWT_SECRET: ci-only-not-a-production-secret

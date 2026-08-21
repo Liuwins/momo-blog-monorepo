@@ -84,6 +84,7 @@
 - 运维脚本已补齐缺失数据库/媒体目录的成对备份保护、证书续期失败处理、空媒体目录兼容和绝对 URL 引用归一化；新增不带凭据的 `scripts/production-smoke.sh`，用于目标域名现场检查首页、安全头、manifest、Service Worker、健康接口和 Socket.IO polling。
 - 公开仓库环境文件治理已收紧：前端仅保留 `.env.example` 模板，CI 拒绝提交其他 `.env`、数据库、证书、密钥和截图文件。
 - 阶段 8 现场验收记录模板已加入 `docs/PRODUCTION-ACCEPTANCE.md`；未获得目标环境信息前只维护模板和待验收清单，不填写伪造结果。
+- 敏感文件门禁已提取为根目录 `scripts/repository-hygiene.mjs`，本地和 GitHub Actions 使用同一实现；它只检查已跟踪文件，不读取生产凭据。
 - 前端路由懒加载已增加一次可控失败重试，并用 2 条测试固定瞬时 chunk 失败与永久失败边界，降低跨页面导航出现“页面加载失败”的概率。
 - 动态与个人资料媒体引用已增加 URL/路径、协议、路径穿越和 `simple-array` 分隔符校验，并补充 DTO 回归测试。
 

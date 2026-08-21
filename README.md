@@ -46,6 +46,14 @@ npm run dev
 - [ROADMAP.md](ROADMAP.md)：当前已实现能力和待办事项。
 - [CHANGELOG.md](CHANGELOG.md)：公开变更记录与发布约定。
 
+公开仓库卫生检查（无需安装额外依赖）：
+
+```powershell
+node .\scripts\repository-hygiene.mjs
+```
+
+该检查会扫描已跟踪文件中的环境文件、数据库、日志、证书、密钥、上传目录、截图和构建产物，并执行 Git 空白错误检查。
+
 根目录的旧部署文件和子项目旧 README/ROADMAP 仍保留路径，但只作为兼容说明，不再承载独立部署命令。
 
 ## 历史 GitHub 仓库
