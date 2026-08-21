@@ -30,7 +30,7 @@
 
 - 阶段 1–6 的代码、迁移、回归测试和公开快照治理已补齐；本地提交仍待最终公开审查，暂不自动推送；
 - 阶段 2 已建立前后端 Vitest 基线：后端 31 条、前端 5 条测试通过，lint、typecheck 和 build 均通过；CI 已加入公开仓库敏感/生成文件扫描、运维脚本语法检查和高危依赖门禁，真实 CI 运行结果仍待补齐；
-- 真实生产域名、HTTPS、WebSocket、上传、目标服务器 migration 和备份恢复尚未完成现场验证；Node 22 完整 Compose 重建曾因外部 Debian 镜像源下载失败中断，不能把该次失败写成应用故障。
+- 隔离端口的 Node 22 完整 Compose、migration、健康检查、Socket.IO polling、正确的 `webmanifest` MIME 和 390×844 浏览器冒烟已通过；真实生产域名、HTTPS、真实 WebSocket、上传、目标服务器 migration 和备份恢复仍未完成现场验证。
 
 ### 阶段 2 本轮进度
 

@@ -8,7 +8,7 @@
 - 增加 GitHub Issue/PR 模板和公开仓库敏感文件检查约定。
 - 完成阶段 6 本地增强：PWA manifest/Service Worker、动态编辑历史与回滚、通知去重和回复边界校验、更严格媒体文件头/图片解码校验、CSP 与部署端口参数化。
 - 阶段 6 本地回归通过：后端 31 条测试、前端 5 条测试，前端 lint、前后端 typecheck/build 和高危级别依赖审计通过。
-- Node 22 完整 Compose 重建受外部 Debian 镜像源下载失败影响，真实域名、HTTPS、WebSocket、上传、目标服务器 migration 和备份恢复仍需现场验收。
+- 后端 Node 22 镜像改为直接使用 better-sqlite3/sharp 预构建包，移除不必要的 Debian 编译工具下载；Nginx 补充 `webmanifest` MIME 类型；隔离端口完整 Compose、migration、健康检查、Socket.IO polling 和 390×844 浏览器冒烟已通过。真实域名、HTTPS、目标服务器 migration、上传和备份恢复仍需现场验收。
 
 ## 发布约定
 

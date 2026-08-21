@@ -24,7 +24,7 @@ MomoBlog 是一个移动端优先、朋友圈风格的个人动态博客。它�
 
 | 子项目 | 分支 | 当前提交 |
 | --- | --- | --- |
-| Monorepo 根 | `master` | 已领先远程 4 个本地提交；阶段 6 改动尚未提交，公开推送仍待最终审查 |
+| Monorepo 根 | `master` | 已领先远程 5 个本地提交；阶段 6 已提交到本地，公开推送仍待最终审查 |
 | 前端导入基线 | `legacy/frontend-master-20260821` | `425f812`（2026-08-12） |
 | 后端导入基线 | `legacy/server-master-20260821` | `d60173c`（2026-08-12） |
 
@@ -388,7 +388,7 @@ Compose 的 backend 已配置 `/api/health` 健康检查，并要求 frontend �
 
 - 已完成静态审阅：Monorepo 目录、依赖锁文件、配置、路由、前端 API、状态管理、控制器、服务、实体、迁移、Docker/Nginx 和运维脚本。
 - 本地自动化验证：前端测试 5/5、lint 0 error/0 warning、build 通过；后端测试 31/31、typecheck/build 通过；Compose 插值和 Bash 脚本语法通过；前端及后端生产依赖高危级别审计门禁通过（后端仍有 Nest 10 的低/中危告警，不能用 `npm audit fix --force` 处理）。
-- 本地运行验证：此前临时生产后端镜像和 `/api/health` 曾验证通过；查询基准、媒体报告和隔离恢复演练通过；390×844 视口首页、详情评论栏、登录和发布路由守卫冒烟通过，控制台错误数为 0。当前 Node 22 完整 Compose 重建因外部 Debian 镜像源下载失败中断，未将其记为成功。
+- 本地运行验证：Node 22 前后端生产镜像、隔离端口 Compose、migration、backend `healthy`、前端首页、`application/manifest+json` manifest、Service Worker、Nginx `/api/health`、Socket.IO polling 和 CSP/权限响应头均已通过；查询基准、媒体报告和隔离恢复演练通过；390×844 浏览器首页冒烟通过，控制台错误数为 0。
 - 未完成：真实域名/HTTPS、目标服务器迁移、真实 WebSocket、上传、备份恢复、真实 PWA 安装和 GitHub 远程 CI 验收；本地验证不替代这些现场验证。
 
 在把本文用于上线决策前，应按实际部署环境补做上述运行验证。

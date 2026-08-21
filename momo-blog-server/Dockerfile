@@ -1,6 +1,7 @@
 # ===== 构建阶段：编译 TS + 原生模块 =====
 FROM node:22-slim AS builder
-RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
+# Node 22 下 better-sqlite3 和 sharp 使用 Linux 预构建包，避免构建阶段额外下载 Debian 编译工具。
+# 若未来引入无预构建包的原生依赖，应单独评估并恢复可复现的构建工具链。
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci

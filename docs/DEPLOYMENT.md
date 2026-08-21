@@ -85,14 +85,14 @@ $env:FRONTEND_HOST_BIND = '127.0.0.1'
 $env:FRONTEND_HOST_PORT = '39080'
 $env:BACKEND_HOST_PORT = '39081'
 docker compose --project-name momoblog-check -f momo-blog-server/docker-compose.yml up -d --build
-Invoke-WebRequest http://localhost:39080/ -TimeoutSec 10
-Invoke-WebRequest http://localhost:39080/manifest.webmanifest -TimeoutSec 10
-Invoke-WebRequest http://localhost:39080/sw.js -TimeoutSec 10
-Invoke-WebRequest http://localhost:39080/api/health -TimeoutSec 10
+Invoke-WebRequest http://127.0.0.1:39080/ -TimeoutSec 10
+Invoke-WebRequest http://127.0.0.1:39080/manifest.webmanifest -TimeoutSec 10
+Invoke-WebRequest http://127.0.0.1:39080/sw.js -TimeoutSec 10
+Invoke-WebRequest http://127.0.0.1:39080/api/health -TimeoutSec 10
 docker compose --project-name momoblog-check -f momo-blog-server/docker-compose.yml down -v
 ```
 
-2026-08-22 本地回归已通过前后端测试、lint、typecheck 和 build；Node 22 完整 Compose 重建因外部 Debian 镜像源下载失败中断，因此上述容器链路、真实域名和目标服务器结果仍须按环境重新记录，不能仅凭构建日志宣称部署完成。
+2026-08-22 隔离端口完整 Compose 验证通过：Node 22 后端和前端镜像均构建成功，backend 为 `healthy`，前端首页、manifest（`application/manifest+json`）、Service Worker、Nginx 代理 `/api/health` 和 Socket.IO polling 均返回成功，CSP/Permissions-Policy/Referrer-Policy 响应头存在。验证使用 `127.0.0.1:39080/39081`，结束后已删除容器、卷和网络；真实域名、HTTPS、目标服务器和真实设备结果仍须按环境重新记录。
 
 ## 5. 非 Docker 部署
 

@@ -17,7 +17,7 @@
 
 - 前端：Vue 3 + Vite，固定开发端口 `5175`；lint、Vitest、build 已通过，lint 为 0 warning；当前已有路由守卫和全局音乐状态回归测试。
 - 后端：NestJS + TypeORM + better-sqlite3，默认端口 `3001`；typecheck、build 已通过。
-- 部署：Docker Compose、前端 Nginx、SQLite migration、上传目录和备份脚本；本地配置与后端健康检查已验证，尚未完成真实服务器、WebSocket、上传和恢复演练。
+- 部署：Docker Compose、前端 Nginx、SQLite migration、上传目录和备份脚本；隔离端口完整 Compose、migration、健康检查和 Socket.IO polling 已验证，尚未完成真实服务器、WebSocket、上传和恢复演练。
 - 仓库：公开仓库只发布当前快照；旧仓库作为历史归档，不再推送业务代码。
 
 ## 阶段 0：基线与发布治理
@@ -102,7 +102,7 @@
 - 删除并恢复临时数据库和上传目录后，站点数据和媒体引用一致。
 - WebSocket 与大文件上传均有真实请求验证记录。
 
-阶段 3 当前进度：Compose 配置校验、后端生产镜像构建、临时数据库迁移和健康检查（`/api/health` 返回 200）曾在隔离环境通过；备份脚本已生成数据库与媒体成对归档，并完成隔离恢复完整性演练。当前 Node 22 镜像重建因外部 Debian 镜像源下载失败中断，不能将其写成应用故障；真实域名、WebSocket、上传和目标部署机恢复仍未验证。
+阶段 3 当前进度：Compose 配置校验、Node 22 前后端生产镜像构建、临时数据库迁移和健康检查（`/api/health` 返回 200）已在 `127.0.0.1:39080/39081` 隔离端口通过；前端首页、`application/manifest+json` manifest、Service Worker、Nginx API 代理、Socket.IO polling 和安全响应头均已验证。备份脚本已生成数据库与媒体成对归档，并完成隔离恢复完整性演练；真实域名、HTTPS、真实 WebSocket、上传和目标部署机恢复仍未验证。
 
 ## 阶段 4：查询性能与资源治理
 
@@ -173,7 +173,7 @@
 - 严格 CSP、Permissions-Policy、Referrer-Policy，以及 MIME、文件头、图片解码和像素上限校验；
 - Issue/PR 模板、变更日志和可重复发布入口。
 
-阶段 6 本地验证：前端 lint、5 条 Vitest、build；后端 31 条 Vitest、typecheck、build；两端高危级别审计通过。Node 22 完整 Compose 重建受外部镜像源网络影响未完成，不能替代目标服务器验收。
+阶段 6 本地验证：前端 lint、5 条 Vitest、build；后端 31 条 Vitest、typecheck、build；两端高危级别审计通过；隔离端口完整 Compose 和 390×844 浏览器冒烟通过，不能替代目标服务器验收。
 
 ## 每阶段固定验证清单
 
