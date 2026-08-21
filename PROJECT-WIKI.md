@@ -24,7 +24,7 @@ MomoBlog 是一个移动端优先、朋友圈风格的个人动态博客。它�
 
 | 子项目 | 分支 | 当前提交 |
 | --- | --- | --- |
-| Monorepo 根 | `master` | 当前包含阶段 1–7 优化；NestJS 11 升级和运维加固已通过本地回归、隔离 Compose 和 GitHub Actions（运行 `32506810694`） |
+| Monorepo 根 | `master` | 当前包含阶段 1–7 优化；NestJS 11 升级和运维加固已通过本地回归、隔离 Compose 和 GitHub Actions（运行 `32508220353`） |
 | 前端导入基线 | `legacy/frontend-master-20260821` | `425f812`（2026-08-12） |
 | 后端导入基线 | `legacy/server-master-20260821` | `d60173c`（2026-08-12） |
 
@@ -287,7 +287,7 @@ UPLOAD_DIR/
 
 ### 开发端口的重要说明
 
-后端代码和 `.env.example` 默认监听 `3001`；前端 `.env.development` 也默认使用 `VITE_API_TARGET=http://localhost:3001`。`vite.config.js` 已显式调用 `loadEnv`，因此直接执行 `npm run dev` 即可读取开发配置；临时切换地址时覆盖同名环境变量即可。
+后端代码和 `.env.example` 默认监听 `3001`；前端提供 `.env.example`，可复制为 `.env.development` 覆盖 `VITE_API_TARGET=http://localhost:3001`。`vite.config.js` 已显式调用 `loadEnv`，因此不复制也能使用内置默认值；临时切换地址时覆盖同名环境变量即可。
 
 ## 9. 部署与运维
 
@@ -388,7 +388,7 @@ Compose 的 backend 已配置 `/api/health` 健康检查，并要求 frontend �
 ## 14. 本次分析的验证范围
 
 - 已完成静态审阅：Monorepo 目录、依赖锁文件、配置、路由、前端 API、状态管理、控制器、服务、实体、迁移、Docker/Nginx 和运维脚本。
-- 本地自动化验证：前端测试 5/5、lint 0 error/0 warning、build 通过；后端（NestJS 11）测试 32/32、typecheck/build 通过；Compose 插值和 Bash 脚本语法通过；前端及后端官方 npm 生产依赖审计均为 0。
+- 本地自动化验证：前端测试 5/5、lint 0 error/0 warning、build 通过；后端（NestJS 11）测试 35/35、typecheck/build 通过；Compose 插值和 Bash 脚本语法通过；前端及后端官方 npm 生产依赖审计均为 0。
 - 本地运行验证：Node 22 前后端生产镜像、NestJS 11 隔离端口 Compose（前端 `39082`、后端 `39083`）、migration、backend `healthy`、SPA、`application/manifest+json` manifest、Socket.IO polling 握手均已通过；此前查询基准、媒体报告和隔离恢复演练通过；390×844 浏览器首页冒烟通过，控制台错误数为 0。
 - 未完成：真实域名/HTTPS、目标服务器 migration、目标服务器 WebSocket/大文件上传、目标服务器备份恢复和真实 PWA 安装；GitHub 远程 CI 已通过，本地隔离环境验证不替代目标服务器现场验证。
 

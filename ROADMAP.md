@@ -29,16 +29,16 @@
 
 ## 当前高优先级缺口
 
-- 阶段 1–7 的代码、迁移、回归测试和公开快照治理已补齐；NestJS 11 升级已在隔离 Compose 和 GitHub Actions 中完成兼容性验证（运行 `32506810694`）；
-- 阶段 2 已建立前后端 Vitest 基线：后端 32 条、前端 5 条测试通过，lint、typecheck 和 build 均通过；GitHub Actions 已通过前端、后端和仓库卫生三项门禁（提交 `2aadbaa`，运行 `32505266448`）；
+- 阶段 1–7 的代码、迁移、回归测试和公开快照治理已补齐；NestJS 11 升级和运维加固已在隔离 Compose 和 GitHub Actions 中完成验证（运行 `32508220353`）；
+- 阶段 2 已建立前后端 Vitest 基线：后端当前 35 条、前端 5 条测试通过，lint、typecheck 和 build 均通过；GitHub Actions 已通过前端、后端和仓库卫生三项门禁（提交 `2aadbaa`，运行 `32505266448`）；
 - 隔离端口的 Node 22 完整 Compose、migration、健康检查、Socket.IO polling、带 JWT 的 WebSocket、真实图片上传/读取、编辑历史回滚、正确的 `webmanifest` MIME 和 390×844 浏览器冒烟已通过；真实生产域名、HTTPS、目标服务器 migration 和备份恢复仍未完成现场验证。
-- NestJS 11 升级后的后端测试 32/32、typecheck、build 和生产依赖审计均通过；隔离 Compose 在 `127.0.0.1:39082/39083` 验证 backend healthy、SPA、manifest 和 Socket.IO 握手，远程 CI 运行 `32506810694` 已通过。
+- NestJS 11 升级后的后端测试 35/35、typecheck、build 和生产依赖审计均通过；隔离 Compose 在 `127.0.0.1:39080/39081` 验证 backend healthy、SPA、manifest、安全头和 Socket.IO 握手，远程 CI 运行 `32508220353` 已通过。
 - 运维加固已通过本地验证：Nginx 首页 MIME 为 `text/html` 且带 `X-Content-Type-Options`，生产冒烟脚本覆盖首页、manifest、health 和 Socket.IO，环境配置新增 3 条回归测试（后端总测试 35 条）。
 
 ### 阶段 2 本轮进度
 
 - 新增前端 Vitest 配置和 5 条回归测试；
-- 新增后端 Vitest 配置、reflect-metadata 测试初始化和 32 条核心业务回归测试，覆盖 Auth、Posts、Comments、Upload、WebSocket、Migration、Health、DTO 和通知去重；
+- 新增后端 Vitest 配置、reflect-metadata 测试初始化和 35 条回归测试，覆盖 Auth、Posts、Comments、Upload、WebSocket、Migration、Health、DTO、环境校验和通知去重；
 - 新增 GitHub Actions，执行前端 lint/test/build 与后端 test/typecheck/build；
 - CI 增加敏感文件/构建产物扫描和 Compose 插值校验；
 - 修复音频文件名控制字符未清洗导致的保存失败；
@@ -50,7 +50,7 @@
 
 - 动态首页列表的评论、点赞状态和点赞用户改为按当前页批量读取，避免每条动态触发额外关联查询；
 - 新增 posts、comments、notifications 高频过滤/排序索引 migration，并在临时 SQLite 中验证索引创建；
-- 后端回归测试增至 32 条，类型检查和构建通过；已加入脱敏内存数据集查询基准和媒体报告/隔离清理流程，目标服务器真实延迟仍待现场测量。
+- 后端回归测试增至 35 条，类型检查和构建通过；已加入脱敏内存数据集查询基准和媒体报告/隔离清理流程，目标服务器真实延迟仍待现场测量。
 
 ### 后续优化执行计划
 
@@ -62,7 +62,7 @@
 4. **媒体资源治理（本地完成）**：已增加媒体统计、孤立文件报表、备份前置和可回滚隔离清理；生产清理仍需在目标服务器按实际路径复演。
 5. **移动端与可访问性（本地完成）**：已处理键盘焦点、ARIA、触摸目标、底部安全区和 reduced-motion，并完成 390×844 本地首页/详情/登录/发布守卫冒烟；真实设备和通知/上传现场仍待复测。
 6. **可选增强（本地完成）**：已实现 PWA 安装入口、生产 Service Worker、动态编辑历史/回滚、通知去重与回复通知边界、更严格媒体文件头和图片解码校验；仍需真实浏览器/设备和目标服务器验收。
-7. **NestJS 11 运行时升级（已完成）**：已升级 Nest 核心、Config、JWT、Passport、TypeORM、WebSockets、CLI 和 Schematics；本地测试、构建、生产审计、隔离 Compose 和 GitHub Actions（运行 `32506810694`）均已通过。
+7. **NestJS 11 运行时升级（已完成）**：已升级 Nest 核心、Config、JWT、Passport、TypeORM、WebSockets、CLI 和 Schematics；本地测试、构建、生产审计、隔离 Compose 和 GitHub Actions（运行 `32508220353`）均已通过。
 8. **真实环境验收（待开始）**：在目标服务器验证 GitHub CI、migration、HTTPS、WebSocket、上传、备份恢复和真实域名；本地构建不替代现场验收。
 
 ## 后续技术债清单
