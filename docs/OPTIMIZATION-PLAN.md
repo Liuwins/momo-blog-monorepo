@@ -74,8 +74,8 @@
 
 - 已完成前端 Vitest 配置；
 - 已覆盖全局背景音乐状态、跨路由不重复加载、发布页未登录拦截和有效会话放行，共 5 条测试；
-- 已新增 `.github/workflows/ci.yml`，本地文件已校验，尚未在 GitHub 远程运行环境验收；
-- 后端业务单元/集成测试、上传和 WebSocket 回归测试仍未完成。
+- 已新增 `.github/workflows/ci.yml`，执行前端 lint/test/build 与后端 test/typecheck/build，尚未在 GitHub 远程运行环境验收；
+- 后端已补 Auth、Posts、Comments 和 DTO 核心业务回归测试（10 条）；上传、WebSocket、Migration 回归测试仍未完成。
 
 验收：
 

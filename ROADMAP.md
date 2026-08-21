@@ -28,14 +28,15 @@
 ## 当前高优先级缺口
 
 - 阶段 1 代码已补齐动态配乐、分页边界、数组元素校验、生产配置保护、Open Graph 域名参数化和 Compose 后端暴露面收敛；本地验证通过，待形成公开提交；
-- 阶段 2 已建立前端 Vitest 基线，覆盖全局音乐状态和发布页路由守卫；后端业务测试、真实 CI 运行结果仍待补齐；
+- 阶段 2 已建立前后端 Vitest 基线；前端覆盖全局音乐状态和发布页路由守卫，后端覆盖 Auth、Posts、Comments 和 DTO 核心规则；上传、WebSocket、migration 回归测试及真实 CI 运行结果仍待补齐；
 - 真实部署、WebSocket、上传和备份恢复尚未完成现场验证。
 
 ### 阶段 2 本轮进度
 
 - 新增前端 Vitest 配置和 5 条回归测试；
-- 新增 GitHub Actions，执行前端 lint/test/build 与后端 typecheck/build；
-- 本地前端测试已通过，CI 尚未在 GitHub 远程运行环境完成验收。
+- 新增后端 Vitest 配置、reflect-metadata 测试初始化和 10 条核心业务回归测试；
+- 新增 GitHub Actions，执行前端 lint/test/build 与后端 test/typecheck/build；
+- 本地前后端测试、类型检查和构建已通过；前端 lint 保留 7 条既有 warning，CI 尚未在 GitHub 远程运行环境完成验收。
 
 详细任务、验收标准、提交边界和回滚要求以 [`docs/OPTIMIZATION-PLAN.md`](docs/OPTIMIZATION-PLAN.md) 为准。
 
