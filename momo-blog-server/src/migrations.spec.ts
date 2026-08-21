@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { DataSource } from 'typeorm';
-import { Init1786353535155 } from './1786353535155-Init';
-import { Init1786353568233 } from './1786353568233-Init';
-import { AddMusicAndBgImage1786418900000 } from './1786418900000-AddMusicAndBgImage';
+import { Init1786353535155 } from './migrations/1786353535155-Init';
+import { Init1786353568233 } from './migrations/1786353568233-Init';
+import { AddMusicAndBgImage1786418900000 } from './migrations/1786418900000-AddMusicAndBgImage';
 
 describe('SQLite migrations', () => {
   let dataSource: DataSource | undefined;

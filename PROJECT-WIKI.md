@@ -296,12 +296,14 @@ UPLOAD_DIR/
 
 Docker 前端 Nginx 已将上传限制设为 `60m`，与后端最大 50 MB 视频限制兼容。Compose 默认只将后端 `3001` 绑定到 `127.0.0.1`；前端构建通过 `SITE_URL` 注入 `VITE_SITE_URL`，生产环境仍要在 `momo-blog-server/.env` 配置强 `JWT_SECRET`、正确的 `CLIENT_ORIGIN` 和 `SITE_URL`。
 
+Compose 的 backend 已配置 `/api/health` 健康检查，并要求 frontend 等待 backend `healthy` 后再启动。健康检查返回 503 时表示数据库不可用或应用未就绪，不应把容器的 `running` 状态误认为部署成功。
+
 ### 非 Docker 路径
 
 - 后端以 systemd 或 PM2 单实例运行；`ecosystem.config.js` 是 PM2 的备选配置。
 - 前端构建产物放在 Nginx 静态目录；后端 `UPLOAD_DIR` 和 Nginx `/images/` 需要指向同一份上传文件。
-- 后端生产模式会自动执行 TypeORM 迁移；部署前务必备份 SQLite。
-- 健康检查端点为 `/api/health`，可用于负载均衡或监控探针。
+- 后端生产模式会自动执行 TypeORM 迁移；部署前务必备份 SQLite。生产构建只加载 `src/migrations/` 下的迁移文件，测试文件放在迁移目录外，避免运行时依赖开发测试包。
+- 健康检查端点为 `/api/health`，数据库查询失败时返回 HTTP 503，可用于负载均衡、Compose 和监控探针。
 
 ### 随仓库脚本
 
@@ -332,11 +334,12 @@ Docker 前端 Nginx 已将上传限制设为 `60m`，与后端最大 50 MB 视�
 | 已处理 | 后端默认 `3001`，旧 Vite 代理示例为 `3009`，`.env.development` 曾使用未读取的 `VITE_API_URL` | 本地前后端按旧示例启动时 API 请求会失败 | 已统一为 `VITE_API_TARGET=http://localhost:3001`，并让 `vite.config.js` 显式加载 `.env` |
 | 已处理 | 旧非 Docker Nginx 示例未配置 `/socket.io/`，且上传上限仅 10m | 实时通知无法升级 WebSocket；大文件被 Nginx 先拦截 | 已将当前基线收敛到 `docs/DEPLOYMENT.md`，要求完整代理配置和至少 60 MB 上传上限 |
 | 已处理 | Docker Compose 曾将 `3001:3001` 暴露到宿主机，而部署基线要求后端不对外暴露 | API 可绕开前端 Nginx 直接访问 | 已改为默认 `127.0.0.1:${BACKEND_HOST_PORT:-3001}:3001`；仅在确认额外边界后调整 |
-| 已处理 | 公开快照包含两个重复的初始化 migration，空库执行会在第二个 migration 创建已存在的 `comments` 表并失败 | 生产首次部署可能在迁移阶段失败 | 重复 migration 已改为兼容性 no-op；在内存 SQLite 空库上验证三条 migration 可完整回放 |
+| 已处理 | 公开快照包含两个重复的初始化 migration，空库执行会在第二个 migration 创建已存在的 `comments` 表并失败 | 生产首次部署可能在迁移阶段失败 | 重复 migration 已改为兼容性 no-op；在内存 SQLite 空库和临时生产容器上验证三条 migration 可完整回放 |
+| 已处理 | Compose 只按容器启动顺序启动 frontend，健康接口即使数据库查询失败也返回 HTTP 200 | 迁移失败或数据库锁定时可能被误判为已部署 | backend 增加 healthcheck，frontend 等待 `service_healthy`；数据库异常返回 HTTP 503 |
 | 中 | `cleanup-images.sh` 只收集 `posts.images` 与 `users.avatar` 的引用 | 视频、动态配乐、背景图、背景音乐等仍在使用的文件可能被误删 | 扩展引用扫描范围，并保持默认只报告模式 |
 | 已处理 | 前端/后端旧 `ROADMAP.md` 曾写“通知中心 UI 未接”，但当前已有 `Notifications.vue`、通知 Pinia Store 和 Socket.IO 连接代码 | 旧路线图会误导维护 | 已收敛到根 `ROADMAP.md`，子项目文件改为入口说明 |
 | 已处理 | `GET /api/users/:id/posts` 会查询 `p.music`，但正常创建流程不写入 `music` | 个人页与首页的动态模型可能出现字段能力不一致 | 已随动态配乐修复统一创建、更新及各查询返回；阶段 2 仍需补回归测试 |
-| 低 | 前端配置了 Vitest，项目中未发现测试源码；后端没有测试脚本 | 关键鉴权、上传、审核和迁移缺少回归保护 | 优先补 Auth、Posts、Comments、Upload 与路由守卫测试 |
+| 已处理 | 前端配置了 Vitest，项目中未发现测试源码；后端没有测试脚本 | 关键鉴权、上传、审核和迁移缺少回归保护 | 已补前后端测试与 CI 基线；真实 GitHub CI、上传现场、WebSocket 现场和备份恢复仍需部署环境验收 |
 
 ## 12. 维护约定
 

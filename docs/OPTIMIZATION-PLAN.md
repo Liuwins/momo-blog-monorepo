@@ -75,7 +75,8 @@
 - 已完成前端 Vitest 配置；
 - 已覆盖全局背景音乐状态、跨路由不重复加载、发布页未登录拦截和有效会话放行，共 5 条测试；
 - 已新增 `.github/workflows/ci.yml`，执行前端 lint/test/build 与后端 test/typecheck/build，尚未在 GitHub 远程运行环境验收；
-- 后端已补 Auth、Posts、Comments、Upload、WebSocket、Migration 和 DTO 核心业务回归测试（15 条）；本地测试、类型检查和构建已通过，远程 CI 尚未验收。
+- 后端已补 Auth、Posts、Comments、Upload、WebSocket、Migration、Health 和 DTO 核心业务回归测试（17 条）；本地测试、类型检查和构建已通过，远程 CI 尚未验收。
+- CI 已增加公开仓库敏感/生成文件扫描和 Compose 插值校验；远程 CI 尚未验收。
 
 验收：
 
@@ -89,7 +90,7 @@
 
 任务：
 
-- 补 Compose healthcheck、启动顺序、迁移失败处理和日志查看说明。
+- 已补 Compose healthcheck、启动顺序、迁移失败处理和日志查看说明；临时 Docker 后端已验证 migration 与 `/api/health`。
 - 在临时环境完成 `/api/health`、SPA、API、图片、上传和 Socket.IO 代理验证。
 - 备份脚本执行一次 SQLite 与上传目录备份；在隔离目录完成恢复演练并记录耗时和结果。
 - 完善媒体清理脚本的引用扫描，覆盖图片、视频、动态配乐、头像、封面和背景音乐；保持默认只报告。
@@ -100,6 +101,8 @@
 - 新机器按 `docs/DEPLOYMENT.md` 可以完成部署，不依赖个人绝对路径或本机配置。
 - 删除并恢复临时数据库和上传目录后，站点数据和媒体引用一致。
 - WebSocket 与大文件上传均有真实请求验证记录。
+
+阶段 3 当前进度：Compose 配置校验、后端生产镜像构建、临时数据库迁移和健康检查已通过；完整前端容器因本机 80 端口被其他项目占用未启动，真实域名、WebSocket、上传和备份恢复仍未验证。
 
 ## 阶段 4：查询性能与资源治理
 

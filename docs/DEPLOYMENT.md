@@ -51,6 +51,8 @@ Compose 会使用前端 Dockerfile 的构建上下文 `../momo-blog`，并持久
 
 Compose 默认将后端绑定到宿主机回环地址（`127.0.0.1:3001:3001`），不会直接暴露到公网；如前端和后端只在 Compose 网络内通信，也可以移除该端口映射。不要改回 `3001:3001`，除非已确认有额外的防火墙和鉴权边界。
 
+后端配置了 Docker healthcheck：只有 `/api/health` 返回 HTTP 200 且数据库查询成功后，前端容器才会启动。迁移失败、数据库锁定或数据目录不可用时，后端会保持 unhealthy，前端不会被误判为已部署；此时先查看 `docker compose ... logs --tail=100 backend`，修复配置或恢复备份后再重启。
+
 前端 Dockerfile 使用 `SITE_URL` 作为 `VITE_SITE_URL` 构建参数，首页 Open Graph 元数据和后端分享页因此使用同一站点地址。生产部署前请在 Compose 使用的 `.env` 中同时配置 `SITE_URL` 与 `CLIENT_ORIGIN`。
 
 ## 4. 验证
@@ -65,6 +67,7 @@ docker compose -f momo-blog-server/docker-compose.yml ps
 - 前端首页返回 200；
 - `/api/health` 返回 `status: ok`；
 - 后端日志无迁移失败；
+- `docker compose ... ps` 中 backend 状态为 `healthy`、frontend 状态为 `running`；
 - `/socket.io/` 代理包含 `Upgrade` 和 `Connection: upgrade`；
 - 图片、视频、音频可以通过 `/images/` 访问。
 
@@ -121,6 +124,7 @@ location /socket.io/ {
 - 生产模式使用 TypeORM migration，不要打开 `synchronize`。
 - `node dist/seed.js` 会清空数据，仅允许用于空库演示初始化；必须通过 `SEED_ADMIN_PASSWORD` 注入一次性演示密码，不能使用生产凭据。
 - 执行升级前先备份 SQLite 和上传目录；恢复时必须同时恢复数据库与媒体文件。
+- Compose 首次启动或版本升级时会在 Nest 应用初始化阶段执行生产 migration；迁移失败不会跳过错误继续提供流量。确认日志中出现应用监听日志且 healthcheck 为 `healthy` 后，才视为迁移完成。
 - `backup.sh`、`cert-check.sh`、`cleanup-images.sh` 是参数化部署脚本模板：路径、域名、OSS 凭据和引用扫描范围需按环境审查；媒体清理脚本默认只报告，确认后才可设置 `DRY_RUN=0`。
 
 ## 7. 当前不做的假设

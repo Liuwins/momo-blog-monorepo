@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, ServiceUnavailableException } from '@nestjs/common';
 import { SkipThrottle } from '@nestjs/throttler';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
@@ -19,10 +19,12 @@ export class HealthController {
         uptime: Math.round(process.uptime()),
       };
     } catch {
-      return {
+      // 数据库不可用时返回 503，让 Docker/Nginx/监控明确识别服务未就绪。
+      throw new ServiceUnavailableException({
         status: 'error',
         timestamp: new Date().toISOString(),
-      };
+        message: '数据库不可用',
+      });
     }
   }
 }

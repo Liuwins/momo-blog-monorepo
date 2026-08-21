@@ -9,6 +9,28 @@ permissions:
   contents: read
 
 jobs:
+  repository-hygiene:
+    name: Repository hygiene
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Reject sensitive or generated files
+        shell: bash
+        run: |
+          matches="$(git ls-files | grep -E '(^|/)(\.env$|.*\.(sqlite|db|log)$|dist/|images/|uploads/|screenshots/)' || true)"
+          if [ -n "$matches" ]; then
+            echo "敏感或生成文件不允许进入公开仓库："
+            printf '%s\n' "$matches"
+            exit 1
+          fi
+      - name: Validate Compose interpolation
+        env:
+          JWT_SECRET: ci-only-not-a-production-secret
+          CLIENT_ORIGIN: http://localhost
+          SITE_URL: http://localhost
+        run: docker compose -f momo-blog-server/docker-compose.yml config --quiet
+
   frontend:
     name: Frontend checks
     runs-on: ubuntu-latest

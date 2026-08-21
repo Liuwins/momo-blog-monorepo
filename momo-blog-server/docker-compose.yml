@@ -16,6 +16,19 @@ services:
       - backend-data:/app/data
       - backend-images:/app/images
       - backend-logs:/app/logs
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - >-
+          const http=require('http');
+          const req=http.get('http://127.0.0.1:3001/api/health',res=>{res.resume();process.exitCode=res.statusCode===200?0:1;});
+          req.on('error',()=>process.exit(1));
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
     restart: unless-stopped
 
   frontend:
@@ -27,7 +40,8 @@ services:
     ports:
       - "80:80"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     restart: unless-stopped
 
 volumes:
