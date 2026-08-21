@@ -29,11 +29,11 @@
 
 ## 当前高优先级缺口
 
-- 阶段 1–7 的代码、迁移、回归测试和公开快照治理已补齐；NestJS 11 升级、路由懒加载重试、媒体引用校验和运维加固已在隔离 Compose 和 GitHub Actions 中完成验证（最新运行 `32511440234`）；
+- 阶段 1–7 的代码、迁移、回归测试和公开快照治理已补齐；NestJS 11 升级、路由懒加载重试、媒体引用校验和运维加固已在隔离 Compose 和 GitHub Actions 中完成验证（代码变更运行 `32511440234`，重构回归运行 `32511825831`）；
 - 两个旧 GitHub 仓库已在本地禁用 push，但远程仍为公开且未归档，README 迁移链接和 GitHub Archived 设置待用户确认，未擅自修改外部仓库；
-- 阶段 2 已建立前后端 Vitest 基线：后端当前 39 条、前端 19 条测试通过，lint、typecheck 和 build 均通过；本轮新增请求拦截器、会话恢复、发布/评论交互和媒体引用校验；最新提交 `9fb8fc7` 的 GitHub Actions 已通过前端、后端和仓库卫生三项门禁（运行 `32511440234`）；
+- 阶段 2 已建立前后端 Vitest 基线：后端当前 39 条、前端 19 条测试通过，lint、typecheck 和 build 均通过；本轮新增请求拦截器、会话恢复、发布/评论交互和媒体引用校验；代码提交 `9fb8fc7` 的 GitHub Actions 已通过前端、后端和仓库卫生三项门禁（运行 `32511440234`），随后公共校验器重构的回归运行 `32511825831` 也已通过；
 - 隔离端口的 Node 22 完整 Compose、migration、健康检查、Socket.IO polling、带 JWT 的 WebSocket、真实图片上传/读取、编辑历史回滚、正确的 `webmanifest` MIME 和 390×844 浏览器冒烟已通过；真实生产域名、HTTPS、目标服务器 migration 和备份恢复仍未完成现场验证。
-- NestJS 11 升级后的后端测试 39/39、typecheck、build 和生产依赖审计均通过；隔离 Compose 在 `127.0.0.1:39080/39081` 验证 backend healthy、SPA、manifest、安全头和 Socket.IO 握手，远程 CI 运行 `32511440234` 已通过。
+- NestJS 11 升级后的后端测试 39/39、typecheck、build 和生产依赖审计均通过；隔离 Compose 在 `127.0.0.1:39080/39081` 验证 backend healthy、SPA、manifest、安全头和 Socket.IO 握手，远程 CI 运行 `32511825831` 已通过。
 - 运维加固已通过本地验证：Nginx 首页 MIME 为 `text/html` 且带 `X-Content-Type-Options`，生产冒烟脚本覆盖首页、manifest、health 和 Socket.IO，环境配置新增 3 条回归测试（后端总测试 39 条）。
 - 前端路由懒加载增加一次失败重试，覆盖首次 chunk 请求抖动/部署缓存切换；新增 2 条单元测试，避免直接落入“页面加载失败”状态。
 
@@ -64,7 +64,7 @@
 4. **媒体资源治理（本地完成）**：已增加媒体统计、孤立文件报表、备份前置和可回滚隔离清理；生产清理仍需在目标服务器按实际路径复演。
 5. **移动端与可访问性（本地完成）**：已处理键盘焦点、ARIA、触摸目标、底部安全区和 reduced-motion，并完成 390×844 本地首页/详情/登录/发布守卫冒烟；真实设备和通知/上传现场仍待复测。
 6. **可选增强（本地完成）**：已实现 PWA 安装入口、生产 Service Worker、动态编辑历史/回滚、通知去重与回复通知边界、更严格媒体文件头和图片解码校验；仍需真实浏览器/设备和目标服务器验收。
-7. **NestJS 11 运行时升级（已完成）**：已升级 Nest 核心、Config、JWT、Passport、TypeORM、WebSockets、CLI 和 Schematics；本地测试、构建、生产审计、隔离 Compose 和最新 GitHub Actions（运行 `32511440234`）均已通过。
+7. **NestJS 11 运行时升级（已完成）**：已升级 Nest 核心、Config、JWT、Passport、TypeORM、WebSockets、CLI 和 Schematics；本地测试、构建、生产审计、隔离 Compose 和 GitHub Actions（运行 `32511825831`）均已通过。
 8. **真实环境验收（待开始）**：在目标服务器验证 GitHub CI、migration、HTTPS、WebSocket、上传、备份恢复和真实域名；本地构建不替代现场验收。
 
 ## 后续技术债清单
