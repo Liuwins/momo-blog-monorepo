@@ -7,6 +7,7 @@
     >
     <van-tabbar-item
       v-if="userStore.isLoggedIn"
+      class="notification-tab"
       icon="bell-o"
       to="/notifications"
       :badge="unreadCount || ''"
@@ -74,3 +75,13 @@ function handlePublish() {
   }
 }
 </script>
+
+<style scoped>
+/* Vant 默认角标会跟随图标底部间距下移，在窄屏底栏上容易压住“通知”文字。 */
+.notification-tab :deep(.van-badge--fixed) {
+  z-index: 2;
+  top: -3px;
+  right: -3px;
+  margin-top: 0;
+}
+</style>
