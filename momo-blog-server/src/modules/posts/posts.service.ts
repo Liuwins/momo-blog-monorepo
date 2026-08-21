@@ -7,6 +7,10 @@ import { Like } from '../../entities/like.entity';
 import { PostRevision } from '../../entities/post-revision.entity';
 import { CreatePostDto, UpdatePostDto, QueryPostsDto } from './dto';
 
+function escapeLikePattern(value: string) {
+  return value.replace(/[\\%_]/g, '\\$&');
+}
+
 @Injectable()
 export class PostsService {
   constructor(
@@ -30,11 +34,18 @@ export class PostsService {
       .take(pageSize);
 
     if (keyword) {
-      qb.andWhere('post.content LIKE :keyword', { keyword: `%${keyword}%` });
+      qb.andWhere("post.content LIKE :keyword ESCAPE '\\'", {
+        keyword: `%${escapeLikePattern(keyword)}%`,
+      });
     }
 
-    if (tag) {
-      qb.andWhere('post.tags LIKE :tag', { tag: `%${tag}%` });
+    const normalizedTag = typeof tag === 'string' ? tag.trim() : tag;
+    if (normalizedTag) {
+      // simple-array 以逗号分隔；INSTR 配合首尾逗号只匹配完整标签，不把“生活”误匹配为“生活方式”。
+      qb.andWhere(
+        "INSTR(',' || COALESCE(post.tags, '') || ',', ',' || :tag || ',') > 0",
+        { tag: normalizedTag },
+      );
     }
 
     if (sortBy === 'hot') {

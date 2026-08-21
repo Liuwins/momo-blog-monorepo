@@ -11,6 +11,7 @@ import {
   ValidatorConstraint,
   ValidatorConstraintInterface,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { PaginationQueryDto } from '../../common/dto/pagination.dto';
 import { noComma, safeMedia } from '../../common/validators/media-reference';
 
@@ -121,5 +122,7 @@ export class QueryPostsDto extends PaginationQueryDto {
   @IsOptional()
   @IsString()
   @MaxLength(50)
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @noComma()
   tag?: string;
 }

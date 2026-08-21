@@ -177,6 +177,28 @@ describe('PostsService', () => {
     expect(likesRepo.exist).not.toHaveBeenCalled();
   });
 
+  it('对关键词通配符转义，并按完整标签边界查询', async () => {
+    queryBuilder.getManyAndCount.mockResolvedValue([[], 0]);
+
+    await service.findAll({
+      page: 1,
+      pageSize: 10,
+      keyword: '100%_完成',
+      tag: ' 生活 ',
+    } as any);
+
+    expect(queryBuilder.andWhere).toHaveBeenNthCalledWith(
+      1,
+      "post.content LIKE :keyword ESCAPE '\\'",
+      { keyword: '%100\\%\\_完成%' },
+    );
+    expect(queryBuilder.andWhere).toHaveBeenNthCalledWith(
+      2,
+      "INSTR(',' || COALESCE(post.tags, '') || ',', ',' || :tag || ',') > 0",
+      { tag: '生活' },
+    );
+  });
+
   it('个人动态复用统一序列化并保留当前用户点赞状态', async () => {
     queryBuilder.getManyAndCount.mockResolvedValue([
       [{

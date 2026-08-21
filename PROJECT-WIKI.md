@@ -391,7 +391,7 @@ Compose 的 backend 已配置 `/api/health` 健康检查，并要求 frontend �
 ## 14. 本次分析的验证范围
 
 - 已完成静态审阅：Monorepo 目录、依赖锁文件、配置、路由、前端 API、状态管理、控制器、服务、实体、迁移、Docker/Nginx 和运维脚本。
-- 本地自动化验证：前端测试 19/19、lint 0 error/0 warning、build 通过；后端（NestJS 11）测试 48/48、typecheck/build 通过；仓库卫生脚本、Compose 插值和 Bash 脚本语法通过；前端及后端官方 npm 生产依赖审计均为 0。
+- 本地自动化验证：前端测试 19/19、lint 0 error/0 warning、build 通过；后端（NestJS 11）测试 50/50、typecheck/build 通过；仓库卫生脚本、Compose 插值和 Bash 脚本语法通过；前端及后端官方 npm 生产依赖审计均为 0。
 - 本地运行验证：Node 22 前后端生产镜像、NestJS 11 隔离端口 Compose（前端 `39082`、后端 `39083`）、migration、backend `healthy`、SPA、`application/manifest+json` manifest、Socket.IO polling 握手均已通过；此前查询基准、媒体报告和隔离恢复演练通过；390×844 浏览器首页冒烟通过，控制台错误数为 0。
 - 未完成：真实域名/HTTPS、目标服务器 migration、目标服务器 WebSocket/大文件上传、目标服务器备份恢复和真实 PWA 安装；GitHub 远程 CI 已通过，本地隔离环境验证不替代目标服务器现场验证。
 

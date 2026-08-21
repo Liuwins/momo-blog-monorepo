@@ -1,6 +1,7 @@
 import { validate } from 'class-validator';
+import { plainToInstance } from 'class-transformer';
 import { describe, expect, it } from 'vitest';
-import { CreatePostDto } from './dto';
+import { CreatePostDto, QueryPostsDto } from './dto';
 
 describe('CreatePostDto', () => {
   it('拒绝空动态和超出数量限制的标签', async () => {
@@ -48,5 +49,14 @@ describe('CreatePostDto', () => {
 
     expect(errors.some((error) => error.property === 'images')).toBe(true);
     expect(errors.some((error) => error.property === 'tags')).toBe(true);
+  });
+
+  it('规范化标签查询并拒绝逗号分隔符', async () => {
+    const dto = plainToInstance(QueryPostsDto, { tag: ' 生活 ' });
+    expect((await validate(dto))).toHaveLength(0);
+    expect(dto.tag).toBe('生活');
+
+    const invalid = plainToInstance(QueryPostsDto, { tag: '生活,隐私' });
+    expect((await validate(invalid)).some((error) => error.property === 'tag')).toBe(true);
   });
 });
