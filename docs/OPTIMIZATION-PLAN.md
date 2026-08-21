@@ -74,9 +74,9 @@
 
 - 已完成前端 Vitest 配置；
 - 已覆盖全局背景音乐状态、跨路由不重复加载、发布页未登录拦截和有效会话放行，共 5 条测试；
-- 已新增 `.github/workflows/ci.yml`，执行前端 lint/test/build、后端 test/typecheck/build、运维脚本语法检查和高危依赖审计，尚未在 GitHub 远程运行环境验收；
-- 后端已补 Auth、Posts、Comments、Upload、WebSocket、Migration、Health、DTO 和通知去重核心业务回归测试（32 条）；本地测试、类型检查和构建已通过，远程 CI 尚未验收。
-- CI 已增加公开仓库敏感/生成文件扫描、Compose 插值校验和恢复脚本语法检查；远程 CI 尚未验收。
+- 已新增 `.github/workflows/ci.yml`，执行前端 lint/test/build、后端 test/typecheck/build、运维脚本语法检查和高危依赖审计；GitHub Actions 已在提交 `2aadbaa`（运行 `32505266448`）通过前端、后端和仓库卫生三项门禁。
+- 后端已补 Auth、Posts、Comments、Upload、WebSocket、Migration、Health、DTO 和通知去重核心业务回归测试（32 条）；本地与远程测试、类型检查和构建均已通过。
+- CI 已增加公开仓库敏感/生成文件扫描、Compose 插值校验和恢复脚本语法检查；远程结果已验收，Actions 已升级到 v5 以消除 Node 20 运行时警告。
 
 验收：
 

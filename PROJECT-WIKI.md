@@ -352,7 +352,7 @@ Compose 的 backend 已配置 `/api/health` 健康检查，并要求 frontend �
 | 已处理 | 媒体目录只有清理脚本，缺少可审计的容量、类型和孤立文件报告 | 媒体增长和清理候选缺少量化依据，误删风险较高 | 已新增只读 `media-report.js`；输出总量、扩展名、引用/孤立文件和字节数，清理仍需备份后显式开启 |
 | 已处理 | 前端/后端旧 `ROADMAP.md` 曾写“通知中心 UI 未接”，但当前已有 `Notifications.vue`、通知 Pinia Store 和 Socket.IO 连接代码 | 旧路线图会误导维护 | 已收敛到根 `ROADMAP.md`，子项目文件改为入口说明 |
 | 已处理 | `GET /api/users/:id/posts` 会查询 `p.music`，但正常创建流程不写入 `music` | 个人页与首页的动态模型可能出现字段能力不一致 | 已随动态配乐修复统一创建、更新及各查询返回，并有回归测试覆盖 |
-| 已处理 | 前端配置了 Vitest，项目中未发现测试源码；后端没有测试脚本 | 关键鉴权、上传、审核和迁移缺少回归保护 | 已补前后端测试与 CI 基线；真实 GitHub CI、上传现场、WebSocket 现场和备份恢复仍需部署环境验收 |
+| 已处理 | 前端配置了 Vitest，项目中未发现测试源码；后端没有测试脚本 | 关键鉴权、上传、审核和迁移缺少回归保护 | 已补前后端测试与 CI 基线；GitHub Actions 已通过，目标服务器上传、WebSocket 和备份恢复仍需部署环境验收 |
 | 已处理 | 前后端依赖审计发现上传解析链和前端测试工具链存在高危告警 | 公开仓库安装依赖后可能暴露已知 DoS/原型污染风险 | 已移除未使用的 `mockjs`，并通过 lockfile override 修复前端和后端生产链高危依赖；Nest 10 剩余中低风险需单独评估 Nest 11 升级 |
 | 已处理 | 动态编辑没有可审计的历史版本，误编辑只能手工重建 | 内容恢复困难，管理员无法比较或回滚 | 新增 `post_revisions` 快照、历史查询和事务化恢复接口；真实服务器 migration 与大数据量保留策略仍需复演 |
 | 已处理 | 点赞、评论和回复可能为同一事件重复创建通知，回复目标也可能跨动态伪造 | 通知中心噪声增加，可能把回复错误关联到其他动态 | 新增 `dedupeKey` 唯一去重、动态归属校验，并分别通知动态作者与原评论登录用户作者 |
@@ -389,6 +389,6 @@ Compose 的 backend 已配置 `/api/health` 健康检查，并要求 frontend �
 - 已完成静态审阅：Monorepo 目录、依赖锁文件、配置、路由、前端 API、状态管理、控制器、服务、实体、迁移、Docker/Nginx 和运维脚本。
 - 本地自动化验证：前端测试 5/5、lint 0 error/0 warning、build 通过；后端测试 32/32、typecheck/build 通过；Compose 插值和 Bash 脚本语法通过；前端及后端生产依赖高危级别审计门禁通过（后端仍有 Nest 10 的低/中危告警，不能用 `npm audit fix --force` 处理）。
 - 本地运行验证：Node 22 前后端生产镜像、隔离端口 Compose、migration、backend `healthy`、临时账号登录、真实图片上传/读取、编辑历史回滚、带 JWT 的 WebSocket、前端首页、`application/manifest+json` manifest、Service Worker、Nginx `/api/health`、Socket.IO polling 和 CSP/权限响应头均已通过；查询基准、媒体报告和隔离恢复演练通过；390×844 浏览器首页冒烟通过，控制台错误数为 0。
-- 未完成：真实域名/HTTPS、目标服务器 migration、目标服务器 WebSocket/大文件上传、目标服务器备份恢复、真实 PWA 安装和 GitHub 远程 CI 验收；本地隔离环境验证不替代这些现场验证。
+- 未完成：真实域名/HTTPS、目标服务器 migration、目标服务器 WebSocket/大文件上传、目标服务器备份恢复和真实 PWA 安装；GitHub 远程 CI 已通过，本地隔离环境验证不替代目标服务器现场验证。
 
 在把本文用于上线决策前，应按实际部署环境补做上述运行验证。
