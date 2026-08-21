@@ -2,6 +2,7 @@ import { Controller, Get, Post, Put, Delete, Body, Param, Query, Request, UseGua
 import { JwtAuthGuard, OptionalJwtAuthGuard } from '../auth/jwt.guard';
 import { PostsService } from './posts.service';
 import { CreatePostDto, UpdatePostDto, QueryPostsDto } from './dto';
+import { PositiveIntPipe } from '../../common/pipes/positive-int.pipe';
 
 @Controller('posts')
 export class PostsController {
@@ -15,7 +16,7 @@ export class PostsController {
 
   @Get(':id/history')
   @UseGuards(JwtAuthGuard)
-  async getHistory(@Param('id') id: number, @Request() req) {
+  async getHistory(@Param('id', PositiveIntPipe) id: number, @Request() req) {
     const history = await this.postsService.getHistory(id, req.user.id);
     if (!history) throw new NotFoundException('文章不存在或无权查看历史');
     return history;
@@ -24,8 +25,8 @@ export class PostsController {
   @Post(':id/history/:revisionId/restore')
   @UseGuards(JwtAuthGuard)
   async restoreHistory(
-    @Param('id') id: number,
-    @Param('revisionId') revisionId: number,
+    @Param('id', PositiveIntPipe) id: number,
+    @Param('revisionId', PositiveIntPipe) revisionId: number,
     @Request() req,
   ) {
     const result = await this.postsService.restoreRevision(id, revisionId, req.user.id);
@@ -40,7 +41,7 @@ export class PostsController {
 
   @Get(':id')
   @UseGuards(OptionalJwtAuthGuard)
-  async findOne(@Param('id') id: number, @Request() req) {
+  async findOne(@Param('id', PositiveIntPipe) id: number, @Request() req) {
     const post = await this.postsService.findById(id, req.user?.id);
     if (!post) throw new NotFoundException('文章不存在');
     return post;
@@ -54,7 +55,7 @@ export class PostsController {
 
   @Put(':id')
   @UseGuards(JwtAuthGuard)
-  async update(@Param('id') id: number, @Request() req, @Body() dto: UpdatePostDto) {
+  async update(@Param('id', PositiveIntPipe) id: number, @Request() req, @Body() dto: UpdatePostDto) {
     const result = await this.postsService.update(id, req.user.id, dto);
     if (!result) throw new NotFoundException('文章不存在或无权操作');
     return result;
@@ -62,7 +63,7 @@ export class PostsController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
-  async delete(@Param('id') id: number, @Request() req) {
+  async delete(@Param('id', PositiveIntPipe) id: number, @Request() req) {
     const result = await this.postsService.delete(id, req.user.id);
     if (!result) throw new NotFoundException('文章不存在或无权操作');
     return { success: true };

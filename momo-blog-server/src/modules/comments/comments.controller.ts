@@ -3,6 +3,7 @@ import { JwtAuthGuard, OptionalJwtAuthGuard } from '../auth/jwt.guard';
 import { CommentsService } from './comments.service';
 import { PaginationQueryDto } from '../../common/dto/pagination.dto';
 import { CreateCommentDto } from './dto';
+import { PositiveIntPipe } from '../../common/pipes/positive-int.pipe';
 
 @Controller('comments')
 export class CommentsController {
@@ -17,7 +18,7 @@ export class CommentsController {
 
   @Get('post/:postId')
   @UseGuards(OptionalJwtAuthGuard)
-  findByPost(@Param('postId') postId: number, @Request() req) {
+  findByPost(@Param('postId', PositiveIntPipe) postId: number, @Request() req) {
     // 未登录也能看（只返回已审核的），登录了看所有
     const userId = req.user?.id;
     return this.commentsService.findByPostId(postId, userId);
@@ -25,20 +26,20 @@ export class CommentsController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
-  delete(@Param('id') id: number, @Request() req) {
+  delete(@Param('id', PositiveIntPipe) id: number, @Request() req) {
     return this.commentsService.delete(id, req.user.id);
   }
 
   // 博主审核评论（仅文章博主可操作）
   @Post(':id/approve')
   @UseGuards(JwtAuthGuard)
-  approve(@Param('id') id: number, @Request() req) {
+  approve(@Param('id', PositiveIntPipe) id: number, @Request() req) {
     return this.commentsService.approve(id, req.user.id);
   }
 
   @Post(':id/reject')
   @UseGuards(JwtAuthGuard)
-  reject(@Param('id') id: number, @Request() req) {
+  reject(@Param('id', PositiveIntPipe) id: number, @Request() req) {
     return this.commentsService.reject(id, req.user.id);
   }
 

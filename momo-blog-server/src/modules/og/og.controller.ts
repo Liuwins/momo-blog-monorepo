@@ -2,6 +2,7 @@ import { Controller, Get, Param, Res } from '@nestjs/common';
 import { Response } from 'express';
 import { PostsService } from '../posts/posts.service';
 import { getSiteUrl } from '../../config/site';
+import { PositiveIntPipe } from '../../common/pipes/positive-int.pipe';
 
 /**
  * HTML 实体转义，防止存储型 XSS
@@ -23,7 +24,7 @@ export class OgController {
 
   // 爬虫/分享链接抓取时返回带 OpenGraph meta 的静态 HTML
   @Get('post/:id')
-  async postCard(@Param('id') id: number, @Res() res: Response) {
+  async postCard(@Param('id', PositiveIntPipe) id: number, @Res() res: Response) {
     const site = getSiteUrl();
     try {
       const data = await this.postsService.findById(id);

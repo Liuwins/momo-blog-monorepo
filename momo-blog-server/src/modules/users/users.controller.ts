@@ -4,6 +4,7 @@ import { getAdminUsername } from '../auth/admin.guard';
 import { UsersService } from './users.service';
 import { UpdateProfileDto } from './dto';
 import { PaginationQueryDto } from '../../common/dto/pagination.dto';
+import { PositiveIntPipe } from '../../common/pipes/positive-int.pipe';
 
 @Controller('users')
 export class UsersController {
@@ -27,7 +28,7 @@ export class UsersController {
 
   @Get(':id')
   @UseGuards(OptionalJwtAuthGuard)
-  getProfile(@Param('id') id: number, @Request() req) {
+  getProfile(@Param('id', PositiveIntPipe) id: number, @Request() req) {
     return this.usersService.getProfile(id, req.user?.id);
   }
 
@@ -46,7 +47,7 @@ export class UsersController {
 
   @Get(':id/posts')
   @UseGuards(OptionalJwtAuthGuard)
-  getUserPosts(@Param('id') id: number, @Query() query: PaginationQueryDto, @Request() req) {
+  getUserPosts(@Param('id', PositiveIntPipe) id: number, @Query() query: PaginationQueryDto, @Request() req) {
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 10;
     return this.usersService.getUserPosts(id, page, pageSize, req.user?.id);
