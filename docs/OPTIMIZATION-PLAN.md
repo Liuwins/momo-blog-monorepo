@@ -79,7 +79,7 @@
 - 已完成前端 Vitest 配置；
 - 已覆盖请求拦截器、用户会话恢复、全局背景音乐状态、跨路由不重复加载、发布页未登录拦截/有效会话放行、发布 payload 和评论交互，共 19 条测试；前端测试脚本已移除 `--passWithNoTests`，测试目录缺失会直接失败。
 - 已新增 `.github/workflows/ci.yml`，执行前端 lint/test/build、后端 test/typecheck/build、运维脚本语法检查和高危依赖审计；代码提交 `9fb8fc7` 的 GitHub Actions（运行 `32511440234`）已通过前端、后端和仓库卫生三项门禁，随后公共校验器重构的回归运行 `32511825831` 也已通过。
-- 后端已补 Auth、Posts、Comments、Upload、WebSocket、Migration、Health、DTO、环境校验、媒体引用、路径 ID、评论关联 ID、标签边界和关键词通配符校验、通知去重回归测试（50 条）；本地与远程测试、类型检查和构建均已通过。
+- 后端已补 Auth、Posts、Comments、Upload、WebSocket、Migration、Health、DTO、环境校验、媒体引用、路径 ID、评论关联 ID、游客标识、标签边界和关键词通配符校验、通知去重回归测试（53 条）；本地与远程测试、类型检查和构建均已通过。
 - CI 已增加公开仓库敏感/生成文件扫描、Compose 插值校验和恢复脚本语法检查；远程结果已验收，Actions 已升级到 v5 以消除 Node 20 运行时警告。
 - 运维脚本已补齐缺失数据库/媒体目录的成对备份保护、成对过期备份清理、证书续期失败处理、空媒体目录兼容和绝对 URL 引用归一化；新增不带凭据的 `scripts/production-smoke.sh`，用于目标域名现场检查首页、安全头、manifest、Service Worker、健康接口和 Socket.IO polling。
 - 公开仓库环境文件治理已收紧：前端仅保留 `.env.example` 模板，CI 拒绝提交其他 `.env`、数据库、证书、密钥和截图文件。
@@ -122,11 +122,11 @@
 
 - 已优化动态列表的 N+1 查询：点赞状态、评论预览和点赞用户按当前页批量读取。
 - 已新增 posts、comments、notifications 高频过滤和排序索引 migration；已用脱敏内存数据集完成查询计划与查询次数基准，目标服务器真实数据量和延迟仍待现场测量。
-- 统一分页上限、排序白名单、关键词长度和标签查询策略，避免无限查询、通配符注入和低效/误匹配的标签查询。
+- 统一分页上限、排序白名单、关键词长度、游客标识和标签查询策略，避免无限查询、通配符注入、身份参数污染和低效/误匹配的标签查询。
 - 统计上传文件大小、类型、失败率和清理候选，避免媒体目录无限增长。
 - 对通知、评论计数和点赞计数的并发一致性增加事务或幂等保护；点赞、评论记录与计数已统一到同一事务。
 
-阶段 4 当前进度：批量关联查询、索引 migration、点赞/评论事务一致性、动态流统一序列化、关注关系幂等、关键词/完整标签查询、查询基准和媒体报告/隔离清理已完成，并通过 50 条后端测试、类型检查和构建；目标服务器真实延迟仍待现场测量。
+阶段 4 当前进度：批量关联查询、索引 migration、点赞/评论事务一致性、动态流统一序列化、关注关系幂等、关键词/完整标签查询、游客标识边界、查询基准和媒体报告/隔离清理已完成，并通过 53 条后端测试、类型检查和构建；目标服务器真实延迟仍待现场测量。
 
 查询基准脚本位于 `momo-blog-server/scripts/query-benchmark.js`，使用内存 SQLite 生成 1000 条动态、6000 条评论和 8000 条点赞，比较旧的逐条关联查询与当前按页批量查询；执行 `npm run benchmark:queries` 可生成 JSON 结果。该基准用于代码回归和相对比较，不代表目标服务器真实延迟。
 
@@ -150,7 +150,7 @@
 | 4 | 媒体统计、孤立文件报表和显式清理 | 代码/运维 | 默认只报告；清理前可备份、可回滚；统计不包含敏感路径和凭据 | 已完成（本地） |
 | 5 | 移动端体验与可访问性 | 前端 | 移动视口下评论、发布、通知、登录和个人页可完成；焦点、ARIA、触摸尺寸和 reduced-motion 通过检查 | 已完成（本地） |
 | 6 | PWA、编辑历史、通知去重和更严格媒体校验 | 代码/迁移 | 生产资源可加载；历史可回滚；重复通知被抑制；媒体头和解码校验通过 | 已完成（本地） |
-| 7 | NestJS 11 运行时与依赖升级 | 依赖/运行时 | 核心包、Config、JWT、Passport、TypeORM、WebSockets、CLI 和 Schematics 升级；后端 50 条测试、typecheck/build、生产审计和隔离 Compose 通过 | 已完成（本地与 CI） |
+| 7 | NestJS 11 运行时与依赖升级 | 依赖/运行时 | 核心包、Config、JWT、Passport、TypeORM、WebSockets、CLI 和 Schematics 升级；后端 53 条测试、typecheck/build、生产审计和隔离 Compose 通过 | 已完成（本地与 CI） |
 | 8 | 目标服务器现场验收 | 部署 | GitHub CI、迁移、HTTPS、WebSocket、上传、备份恢复和真实域名均有现场记录 | 待开始 |
 
 验收：
@@ -184,7 +184,7 @@
 - 严格 CSP、Permissions-Policy、Referrer-Policy，以及 MIME、文件头、图片解码和像素上限校验；
 - Issue/PR 模板、变更日志和可重复发布入口。
 
-阶段 6 本地验证：前端 lint、19 条 Vitest、build；后端 50 条 Vitest、typecheck、build；两端高危级别审计通过；隔离端口完整 Compose 和 390×844 浏览器冒烟通过，不能替代目标服务器验收。
+阶段 6 本地验证：前端 lint、19 条 Vitest、build；后端 53 条 Vitest、typecheck、build；两端高危级别审计通过；隔离端口完整 Compose 和 390×844 浏览器冒烟通过，不能替代目标服务器验收。
 
 ## 阶段 7：NestJS 11 运行时与依赖升级
 
@@ -194,7 +194,7 @@
 
 - 升级 `@nestjs/common`、`core`、`platform-express`、`platform-socket.io`、`websockets`、`config`、`jwt`、`passport`、`typeorm` 至 NestJS 11 对应版本；
 - 升级 Nest CLI 与 Schematics，刷新后端 `package-lock.json`；
-- 后端 50 条测试、typecheck、build 和官方 npm 生产依赖审计均通过；
+- 后端 53 条测试、typecheck、build 和官方 npm 生产依赖审计均通过；
 - 使用 Node 22 生产 Compose 在隔离端口 `39080/39081` 验证容器 healthy、`/api/health`、SPA、`manifest.webmanifest`、安全头和 Socket.IO polling 握手；GitHub Actions 回归运行 `32511825831` 的仓库卫生、前端和后端门禁均通过。
 - 运维脚本回归通过 `bash -n`；目标服务器仍需执行 `BASE_URL=https://<实际域名> ./momo-blog-server/scripts/production-smoke.sh` 并保留输出记录。
 

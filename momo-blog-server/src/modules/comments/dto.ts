@@ -1,4 +1,5 @@
-import { IsInt, IsString, MaxLength, IsOptional, IsNotEmpty, MinLength, Min } from 'class-validator';
+import { IsInt, IsString, MaxLength, IsOptional, IsNotEmpty, MinLength, Min, Matches } from 'class-validator';
+import { VISITOR_ID_PATTERN } from '../../common/validators/visitor-id';
 
 export class CreateCommentDto {
   @IsInt()
@@ -19,6 +20,7 @@ export class CreateCommentDto {
   @IsOptional()
   @IsString()
   @MaxLength(64)
+  @Matches(VISITOR_ID_PATTERN, { message: '游客标识只能包含字母、数字、下划线或连字符' })
   visitorId?: string;
 
   @IsOptional()

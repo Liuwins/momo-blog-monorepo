@@ -23,4 +23,13 @@ describe('CreateCommentDto', () => {
 
     await expect(validate(dto)).resolves.toHaveLength(0);
   });
+
+  it('拒绝包含控制字符的游客标识', async () => {
+    const dto = new CreateCommentDto();
+    dto.postId = 1;
+    dto.content = '评论';
+    dto.visitorId = 'visitor id';
+
+    expect((await validate(dto)).some((error) => error.property === 'visitorId')).toBe(true);
+  });
 });
