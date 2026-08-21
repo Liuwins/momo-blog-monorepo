@@ -41,6 +41,7 @@ npm run dev
 
 - [PROJECT-WIKI.md](PROJECT-WIKI.md)：当前源码、路由、API、数据模型、鉴权和风险说明。
 - [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)：当前 Docker Compose 与非 Docker 部署基线。
+- [docs/OPTIMIZATION-PLAN.md](docs/OPTIMIZATION-PLAN.md)：分阶段优化任务、验收标准和回滚约定。
 - [ROADMAP.md](ROADMAP.md)：当前已实现能力和待办事项。
 
 根目录的旧部署文件和子项目旧 README/ROADMAP 仍保留路径，但只作为兼容说明，不再承载独立部署命令。
