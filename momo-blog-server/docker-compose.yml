@@ -1,16 +1,16 @@
-version: '3.8'
 services:
   backend:
     build: .
     container_name: momo-blog-server
     ports:
-      - "3001:3001"
+      - "127.0.0.1:${BACKEND_HOST_PORT:-3001}:3001"
     environment:
       - NODE_ENV=production
       - PORT=3001
       - DB_PATH=/app/data/momoblog.db
-      - JWT_SECRET=${JWT_SECRET}
-      - CLIENT_ORIGIN=${CLIENT_ORIGIN:-http://localhost}
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set}
+      - CLIENT_ORIGIN=${CLIENT_ORIGIN:?CLIENT_ORIGIN must be set}
+      - SITE_URL=${SITE_URL:?SITE_URL must be set}
       - UPLOAD_DIR=/app/images
     volumes:
       - backend-data:/app/data
@@ -21,6 +21,8 @@ services:
   frontend:
     build:
       context: ../momo-blog
+      args:
+        VITE_SITE_URL: ${SITE_URL:?SITE_URL must be set}
     container_name: momo-blog-frontend
     ports:
       - "80:80"

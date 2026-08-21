@@ -51,6 +51,7 @@ export class PostsService {
         content: post.content,
         images: post.images,
         videos: post.videos,
+        music: post.music,
         tags: post.tags || [],
         createdAt: post.createdAt,
         likeCount: post.likeCount,
@@ -82,6 +83,7 @@ export class PostsService {
       content: post.content,
       images: post.images,
       videos: post.videos,
+      music: post.music,
       tags: post.tags || [],
       createdAt: post.createdAt,
       likeCount: post.likeCount,
@@ -100,6 +102,7 @@ export class PostsService {
       content: dto.content,
       images: dto.images || [],
       videos: dto.videos || [],
+      music: dto.music || '',
       tags: dto.tags || [],
     });
     const saved = await this.postsRepo.save(post);
@@ -112,6 +115,7 @@ export class PostsService {
     if (dto.content !== undefined) post.content = dto.content;
     if (dto.images !== undefined) post.images = dto.images;
     if (dto.videos !== undefined) post.videos = dto.videos;
+    if (dto.music !== undefined) post.music = dto.music;
     if (dto.tags !== undefined) post.tags = dto.tags;
     await this.postsRepo.save(post);
     return this.findById(id, userId);

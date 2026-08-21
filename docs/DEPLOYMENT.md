@@ -26,20 +26,21 @@ PORT=3001
 DB_PATH=/app/data/momoblog.db
 JWT_SECRET=<至少 16 字符的强随机密钥>
 CLIENT_ORIGIN=https://<实际域名>
+SITE_URL=https://<实际域名>
 UPLOAD_DIR=/app/images
 ```
 
-不要提交 `.env`。`JWT_SECRET` 缺失或长度不足时，后端会拒绝启动。
+不要提交 `.env`。`JWT_SECRET`、`CLIENT_ORIGIN` 或 `SITE_URL` 缺失、格式不正确时，Compose 或后端会拒绝启动。
 
 ## 3. Docker Compose 部署
 
-在 Monorepo 根目录执行：
+在 Monorepo 根目录执行（先将生产环境变量写入不入库的 `momo-blog-server/.env`）：
 
 ```powershell
-docker compose -f momo-blog-server/docker-compose.yml config
-docker compose -f momo-blog-server/docker-compose.yml up -d --build
-docker compose -f momo-blog-server/docker-compose.yml ps
-docker compose -f momo-blog-server/docker-compose.yml logs --tail=50 backend
+docker compose --env-file momo-blog-server/.env -f momo-blog-server/docker-compose.yml config
+docker compose --env-file momo-blog-server/.env -f momo-blog-server/docker-compose.yml up -d --build
+docker compose --env-file momo-blog-server/.env -f momo-blog-server/docker-compose.yml ps
+docker compose --env-file momo-blog-server/.env -f momo-blog-server/docker-compose.yml logs --tail=50 backend
 ```
 
 Compose 会使用前端 Dockerfile 的构建上下文 `../momo-blog`，并持久化：
@@ -48,7 +49,9 @@ Compose 会使用前端 Dockerfile 的构建上下文 `../momo-blog`，并持久
 - `backend-images`：上传图片、视频、音频；
 - `backend-logs`：应用日志。
 
-建议生产环境将 `docker-compose.yml` 中的 `3001:3001` 改为仅绑定本机（`127.0.0.1:3001:3001`），或删除端口映射并由外部 Nginx 接入容器网络。不要把 3001 直接暴露到公网。
+Compose 默认将后端绑定到宿主机回环地址（`127.0.0.1:3001:3001`），不会直接暴露到公网；如前端和后端只在 Compose 网络内通信，也可以移除该端口映射。不要改回 `3001:3001`，除非已确认有额外的防火墙和鉴权边界。
+
+前端 Dockerfile 使用 `SITE_URL` 作为 `VITE_SITE_URL` 构建参数，首页 Open Graph 元数据和后端分享页因此使用同一站点地址。生产部署前请在 Compose 使用的 `.env` 中同时配置 `SITE_URL` 与 `CLIENT_ORIGIN`。
 
 ## 4. 验证
 

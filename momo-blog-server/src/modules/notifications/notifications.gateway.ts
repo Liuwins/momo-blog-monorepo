@@ -28,6 +28,15 @@ export class NotificationsGateway {
     private configService: ConfigService,
   ) {}
 
+  /** ConfigModule 从 .env 加载配置后，再把实际 CORS 源写入 Socket.IO。 */
+  afterInit(server: Server) {
+    const clientOrigin = this.configService.get<string>('CLIENT_ORIGIN');
+    server.engine.opts.cors = {
+      origin: clientOrigin || false,
+      credentials: true,
+    };
+  }
+
   /**
    * 从连接握手信息中校验 JWT，提取 userId
    * 前端需在 io({ auth: { token } }) 中传入 JWT

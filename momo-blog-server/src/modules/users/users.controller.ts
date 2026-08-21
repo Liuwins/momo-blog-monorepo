@@ -3,6 +3,7 @@ import { JwtAuthGuard, OptionalJwtAuthGuard } from '../auth/jwt.guard';
 import { getAdminUsername } from '../auth/admin.guard';
 import { UsersService } from './users.service';
 import { UpdateProfileDto } from './dto';
+import { PaginationQueryDto } from '../../common/dto/pagination.dto';
 
 @Controller('users')
 export class UsersController {
@@ -44,9 +45,9 @@ export class UsersController {
   }
 
   @Get(':id/posts')
-  getUserPosts(@Param('id') id: number, @Query() query: any) {
-    const page = parseInt(query.page as string) || 1;
-    const pageSize = parseInt(query.pageSize as string) || 10;
+  getUserPosts(@Param('id') id: number, @Query() query: PaginationQueryDto) {
+    const page = query.page ?? 1;
+    const pageSize = query.pageSize ?? 10;
     return this.usersService.getUserPosts(id, page, pageSize);
   }
 }

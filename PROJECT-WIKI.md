@@ -256,7 +256,7 @@ UPLOAD_DIR/
    ```powershell
    Set-Location .\momo-blog-server
    Copy-Item .env.example .env       # 首次才需要；不要提交 .env
-   # 编辑 .env：设置强 JWT_SECRET，并确认 PORT、DB_PATH、UPLOAD_DIR、CLIENT_ORIGIN
+   # 编辑 .env：设置强 JWT_SECRET，并确认 PORT、DB_PATH、UPLOAD_DIR、CLIENT_ORIGIN、SITE_URL
    npm ci
    npm run start:dev
    ```
@@ -289,12 +289,12 @@ UPLOAD_DIR/
 
 ### Docker Compose 路径
 
-从 Monorepo 根目录执行 `docker compose -f momo-blog-server/docker-compose.yml up -d --build` 会构建：
+从 Monorepo 根目录执行 `docker compose --env-file momo-blog-server/.env -f momo-blog-server/docker-compose.yml up -d --build` 会构建（`.env` 只放服务器，不提交）：
 
 - `backend`：容器内监听 3001，SQLite、图片和日志分别使用命名卷持久化；
 - `frontend`：使用前端 Dockerfile 构建，Nginx 监听 80，代理 API、图片和 Socket.IO。
 
-Docker 前端 Nginx 已将上传限制设为 `60m`，与后端最大 50 MB 视频限制兼容。生产环境仍要在 `momo-blog-server/.env` 配置强 `JWT_SECRET` 和正确的 `CLIENT_ORIGIN`。
+Docker 前端 Nginx 已将上传限制设为 `60m`，与后端最大 50 MB 视频限制兼容。Compose 默认只将后端 `3001` 绑定到 `127.0.0.1`；前端构建通过 `SITE_URL` 注入 `VITE_SITE_URL`，生产环境仍要在 `momo-blog-server/.env` 配置强 `JWT_SECRET`、正确的 `CLIENT_ORIGIN` 和 `SITE_URL`。
 
 ### 非 Docker 路径
 
@@ -317,6 +317,7 @@ Docker 前端 Nginx 已将上传限制设为 `60m`，与后端最大 50 MB 视�
 
 - NestJS 全局 `ValidationPipe` 启用 `whitelist`、`forbidNonWhitelisted` 和类型转换。
 - 全局限流为每 IP 每分钟 60 次；登录单独收紧为每分钟 5 次。
+- `NODE_ENV` 只允许 `development`、`test`、`production`；生产环境会强制校验 `JWT_SECRET`、`CLIENT_ORIGIN` 和 `SITE_URL`，并且只有明确的 `development` 才会启用 TypeORM `synchronize`。
 - JWT 密钥缺失或少于 16 字符时，后端启动失败；JWT 签发有效期为 7 天。
 - 密码使用 bcrypt（10 轮）哈希；用户对外响应会剔除 `password`。
 - Helmet 安全头已启用；HTTP CORS 使用显式 `CLIENT_ORIGIN`，并开启 credentials。
@@ -327,13 +328,14 @@ Docker 前端 Nginx 已将上传限制设为 `60m`，与后端最大 50 MB 视�
 
 | 优先级 | 已确认现象 | 影响 | 建议 |
 | --- | --- | --- | --- |
-| 高 | `CreatePostDto`/`UpdatePostDto`、前端发布页和实体都支持 `music`，但 `PostsService.create`、`update`、`findAll`、`findById` 均未写入或返回该字段 | 正常发布的动态配乐不会持久化，也无法在首页/详情重现 | 在 PostsService 的创建、更新和 DTO 序列化处完整接入 `music`，并补回归测试 |
+| 已处理 | `CreatePostDto`/`UpdatePostDto`、前端发布页和实体都支持 `music`，但 PostsService 未写入或返回该字段 | 正常发布的动态配乐不会持久化，也无法在首页/详情重现 | 已在 PostsService 的创建、更新和列表/详情序列化处接入；阶段 2 仍需补回归测试 |
 | 已处理 | 后端默认 `3001`，旧 Vite 代理示例为 `3009`，`.env.development` 曾使用未读取的 `VITE_API_URL` | 本地前后端按旧示例启动时 API 请求会失败 | 已统一为 `VITE_API_TARGET=http://localhost:3001`，并让 `vite.config.js` 显式加载 `.env` |
 | 已处理 | 旧非 Docker Nginx 示例未配置 `/socket.io/`，且上传上限仅 10m | 实时通知无法升级 WebSocket；大文件被 Nginx 先拦截 | 已将当前基线收敛到 `docs/DEPLOYMENT.md`，要求完整代理配置和至少 60 MB 上传上限 |
-| 中 | Docker Compose 将 `3001:3001` 暴露到宿主机，而 `DEPLOYMENT-CHECKLIST.md` 要求后端不对外暴露 | 防火墙或安全组放开时，API 可绕开前端 Nginx 直接访问 | 若无运维需要，删除宿主机端口映射，仅保留容器网络 |
+| 已处理 | Docker Compose 曾将 `3001:3001` 暴露到宿主机，而部署基线要求后端不对外暴露 | API 可绕开前端 Nginx 直接访问 | 已改为默认 `127.0.0.1:${BACKEND_HOST_PORT:-3001}:3001`；仅在确认额外边界后调整 |
+| 已处理 | 公开快照包含两个重复的初始化 migration，空库执行会在第二个 migration 创建已存在的 `comments` 表并失败 | 生产首次部署可能在迁移阶段失败 | 重复 migration 已改为兼容性 no-op；在内存 SQLite 空库上验证三条 migration 可完整回放 |
 | 中 | `cleanup-images.sh` 只收集 `posts.images` 与 `users.avatar` 的引用 | 视频、动态配乐、背景图、背景音乐等仍在使用的文件可能被误删 | 扩展引用扫描范围，并保持默认只报告模式 |
 | 已处理 | 前端/后端旧 `ROADMAP.md` 曾写“通知中心 UI 未接”，但当前已有 `Notifications.vue`、通知 Pinia Store 和 Socket.IO 连接代码 | 旧路线图会误导维护 | 已收敛到根 `ROADMAP.md`，子项目文件改为入口说明 |
-| 中 | `GET /api/users/:id/posts` 会查询 `p.music`，但正常创建流程不写入 `music` | 个人页与首页的动态模型可能出现字段能力不一致 | 随动态配乐修复一并统一返回 DTO |
+| 已处理 | `GET /api/users/:id/posts` 会查询 `p.music`，但正常创建流程不写入 `music` | 个人页与首页的动态模型可能出现字段能力不一致 | 已随动态配乐修复统一创建、更新及各查询返回；阶段 2 仍需补回归测试 |
 | 低 | 前端配置了 Vitest，项目中未发现测试源码；后端没有测试脚本 | 关键鉴权、上传、审核和迁移缺少回归保护 | 优先补 Auth、Posts、Comments、Upload 与路由守卫测试 |
 
 ## 12. 维护约定

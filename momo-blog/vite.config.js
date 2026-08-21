@@ -8,13 +8,20 @@ export default defineConfig(({ mode }) => {
   // Vite 配置不会自动把 .env 文件注入 process.env，显式加载后本地启动才会使用 .env.development。
   const env = loadEnv(mode, process.cwd(), '')
   const apiTarget = env.VITE_API_TARGET || process.env.VITE_API_TARGET || 'http://localhost:3001'
+  const siteUrl = (env.VITE_SITE_URL || process.env.VITE_SITE_URL || 'http://localhost:5175').replace(/\/+$/, '')
 
   return {
     plugins: [
       vue(),
       Components({
         resolvers: [VantResolver()]
-      })
+      }),
+      {
+        name: 'site-meta-url',
+        transformIndexHtml(html) {
+          return html.replace(/__SITE_URL__/g, () => siteUrl)
+        }
+      }
     ],
     resolve: {
       alias: {

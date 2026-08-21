@@ -13,7 +13,7 @@ export const AppDataSource = new DataSource({
   database: process.env.DB_PATH || './data/momoblog.db',
   entities: [User, Post, Comment, Like, Notification, Follow],
   // 迁移工具：仅在开发环境同步，生产用 migration:run
-  synchronize: process.env.NODE_ENV !== 'production',
+  synchronize: process.env.NODE_ENV === 'development',
   migrations: [path.join(__dirname, 'migrations', '*{.ts,.js}')],
   migrationsRun: false,
 });

@@ -21,10 +21,11 @@ PORT=3001
 DB_PATH=./data/momoblog.db
 JWT_SECRET=<强随机密钥>
 CLIENT_ORIGIN=http://localhost:5175
+SITE_URL=http://localhost:5175
 UPLOAD_DIR=./images
 ```
 
-`.env`、SQLite 数据、上传文件、日志和构建产物都已加入忽略规则，不得提交到 Git。
+生产环境的 `NODE_ENV` 只能是 `production`，且必须配置有效的 `JWT_SECRET`、`CLIENT_ORIGIN` 和 `SITE_URL`；未知的环境值、缺少关键配置或错误的站点地址会在启动时失败。`.env`、SQLite 数据、上传文件、日志和构建产物都已加入忽略规则，不得提交到 Git。
 
 ## 构建与生产启动
 

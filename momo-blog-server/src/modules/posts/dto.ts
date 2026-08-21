@@ -1,4 +1,17 @@
-import { IsOptional, IsString, MaxLength, IsArray, ArrayMaxSize, ArrayUnique, ValidateIf, ValidatorConstraint, ValidatorConstraintInterface, ValidationArguments, Validate } from 'class-validator';
+import {
+  ArrayMaxSize,
+  ArrayUnique,
+  IsArray,
+  IsIn,
+  IsOptional,
+  IsString,
+  MaxLength,
+  Validate,
+  ValidationArguments,
+  ValidatorConstraint,
+  ValidatorConstraintInterface,
+} from 'class-validator';
+import { PaginationQueryDto } from '../../common/dto/pagination.dto';
 
 @ValidatorConstraint({ name: 'NotEmptyPost', async: false })
 export class NotEmptyPostConstraint implements ValidatorConstraintInterface {
@@ -22,11 +35,16 @@ export class CreatePostDto {
 
   @IsOptional()
   @IsArray()
+  @ArrayMaxSize(9, { message: '图片最多 9 张' })
+  @IsString({ each: true })
+  @MaxLength(500, { each: true })
   images?: string[];
 
   @IsOptional()
   @IsArray()
   @ArrayMaxSize(9, { message: '视频最多 9 个' })
+  @IsString({ each: true })
+  @MaxLength(500, { each: true })
   videos?: string[];
 
   @IsOptional()
@@ -38,6 +56,8 @@ export class CreatePostDto {
   @IsArray()
   @ArrayMaxSize(5, { message: '标签最多 5 个' })
   @ArrayUnique({ message: '标签不能重复' })
+  @IsString({ each: true })
+  @MaxLength(50, { each: true })
   tags?: string[];
 
   @Validate(NotEmptyPostConstraint)
@@ -52,11 +72,16 @@ export class UpdatePostDto {
 
   @IsOptional()
   @IsArray()
+  @ArrayMaxSize(9, { message: '图片最多 9 张' })
+  @IsString({ each: true })
+  @MaxLength(500, { each: true })
   images?: string[];
 
   @IsOptional()
   @IsArray()
   @ArrayMaxSize(9, { message: '视频最多 9 个' })
+  @IsString({ each: true })
+  @MaxLength(500, { each: true })
   videos?: string[];
 
   @IsOptional()
@@ -68,25 +93,24 @@ export class UpdatePostDto {
   @IsArray()
   @ArrayMaxSize(5, { message: '标签最多 5 个' })
   @ArrayUnique({ message: '标签不能重复' })
+  @IsString({ each: true })
+  @MaxLength(50, { each: true })
   tags?: string[];
 }
 
-export class QueryPostsDto {
-  @IsOptional()
-  page?: number;
-
-  @IsOptional()
-  pageSize?: number;
+export class QueryPostsDto extends PaginationQueryDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(100)
   keyword?: string;
 
   @IsOptional()
-  @IsString()
+  @IsIn(['latest', 'hot'])
   sortBy?: 'latest' | 'hot';
 
   @IsOptional()
   @IsString()
+  @MaxLength(50)
   tag?: string;
 }

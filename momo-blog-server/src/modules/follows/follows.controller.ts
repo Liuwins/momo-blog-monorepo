@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt.guard';
 import { FollowsService } from './follows.service';
+import { PaginationQueryDto } from '../../common/dto/pagination.dto';
 
 @Controller('follows')
 @UseGuards(JwtAuthGuard)
@@ -30,11 +31,11 @@ export class FollowsController {
 
   // 关注的人的动态流
   @Get('posts')
-  followingPosts(@Request() req, @Query('page') page = '1', @Query('pageSize') pageSize = '10') {
+  followingPosts(@Request() req, @Query() query: PaginationQueryDto) {
     return this.followsService.getFollowingPosts(
       req.user.id,
-      Number(page),
-      Number(pageSize),
+      query.page ?? 1,
+      query.pageSize ?? 10,
     );
   }
 }

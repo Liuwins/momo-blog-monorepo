@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Delete, Body, Param, Query, Request, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard, OptionalJwtAuthGuard } from '../auth/jwt.guard';
 import { CommentsService } from './comments.service';
+import { PaginationQueryDto } from '../../common/dto/pagination.dto';
 import { CreateCommentDto } from './dto';
 
 @Controller('comments')
@@ -44,8 +45,8 @@ export class CommentsController {
   // 待审核列表（仅返回当前用户文章下的待审核评论）
   @Get('admin/pending')
   @UseGuards(JwtAuthGuard)
-  getPending(@Query('page') page: number, @Query('pageSize') pageSize: number, @Request() req) {
-    return this.commentsService.getPending(req.user.id, page || 1, pageSize || 20);
+  getPending(@Query() query: PaginationQueryDto, @Request() req) {
+    return this.commentsService.getPending(req.user.id, query.page ?? 1, query.pageSize ?? 20);
   }
 
   @Get('admin/pending-count')
