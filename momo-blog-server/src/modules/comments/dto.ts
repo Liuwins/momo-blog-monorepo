@@ -1,7 +1,8 @@
-import { IsInt, IsString, MaxLength, IsOptional, IsNotEmpty, MinLength } from 'class-validator';
+import { IsInt, IsString, MaxLength, IsOptional, IsNotEmpty, MinLength, Min } from 'class-validator';
 
 export class CreateCommentDto {
   @IsInt()
+  @Min(1)
   postId: number;
 
   @IsNotEmpty({ message: '评论内容不能为空' })
@@ -22,6 +23,7 @@ export class CreateCommentDto {
 
   @IsOptional()
   @IsInt()
+  @Min(1)
   replyToId?: number;
 
   @IsOptional()
