@@ -27,14 +27,14 @@
 
 ## 当前高优先级缺口
 
-- 阶段 1 代码已补齐动态配乐、分页边界、数组元素校验、生产配置保护、Open Graph 域名参数化和 Compose 后端暴露面收敛；本地验证通过，待形成公开提交；
+- 阶段 1 代码已补齐动态配乐、分页边界、数组元素校验、生产配置保护、Open Graph 域名参数化和 Compose 后端暴露面收敛；相关公开提交已推送到 `origin/master`；
 - 阶段 2 已建立前后端 Vitest 基线；前端覆盖全局音乐状态和发布页路由守卫，后端覆盖 Auth、Posts、Comments、Upload、WebSocket、Migration 和 DTO 核心规则；CI 已加入公开仓库敏感/生成文件扫描，真实 CI 运行结果仍待补齐；
 - 真实生产域名、WebSocket、上传和备份恢复尚未完成现场验证；本地临时 Docker 后端已完成 migration 与 `/api/health` 验证。
 
 ### 阶段 2 本轮进度
 
 - 新增前端 Vitest 配置和 5 条回归测试；
-- 新增后端 Vitest 配置、reflect-metadata 测试初始化和 17 条核心业务回归测试，覆盖 Auth、Posts、Comments、Upload、WebSocket、Migration、Health 和 DTO；
+- 新增后端 Vitest 配置、reflect-metadata 测试初始化和 18 条核心业务回归测试，覆盖 Auth、Posts、Comments、Upload、WebSocket、Migration、Health 和 DTO；
 - 新增 GitHub Actions，执行前端 lint/test/build 与后端 test/typecheck/build；
 - CI 增加敏感文件/构建产物扫描和 Compose 插值校验；
 - 修复音频文件名控制字符未清洗导致的保存失败；
@@ -42,13 +42,19 @@
 
 详细任务、验收标准、提交边界和回滚要求以 [`docs/OPTIMIZATION-PLAN.md`](docs/OPTIMIZATION-PLAN.md) 为准。
 
+### 阶段 4 本轮进度
+
+- 动态首页列表的评论、点赞状态和点赞用户改为按当前页批量读取，避免每条动态触发额外关联查询；
+- 新增 posts、comments、notifications 高频过滤/排序索引 migration，并在临时 SQLite 中验证索引创建；
+- 后端回归测试增至 18 条，类型检查和构建通过；真实数据集查询计划和响应基准仍待补齐。
+
 ## 后续技术债清单
 
 - 已完善媒体引用扫描并保持清理脚本默认只报告；
 - 已补充 SQLite 一致性备份与上传目录成对归档，并在隔离 Alpine 容器完成恢复完整性演练；目标部署机仍需按实际存储路径复演；
 - 已补充 Compose healthcheck、启动顺序和迁移失败处理；
 - 等待 GitHub 远程运行 CI，确认公开仓库扫描、Compose 校验和前后端门禁均通过；
-- 优化 N+1 查询、SQLite 索引、分页和计数一致性；
+- 阶段 4 已完成动态列表批量关联查询和高频 SQLite 索引；剩余分页/查询计划基准和计数并发一致性仍待完成；
 - 改善移动端评论输入、可访问性和离线体验。
 
 ### 可选增强

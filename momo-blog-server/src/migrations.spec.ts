@@ -3,6 +3,7 @@ import { DataSource } from 'typeorm';
 import { Init1786353535155 } from './migrations/1786353535155-Init';
 import { Init1786353568233 } from './migrations/1786353568233-Init';
 import { AddMusicAndBgImage1786418900000 } from './migrations/1786418900000-AddMusicAndBgImage';
+import { AddQueryPerformanceIndexes1786500000000 } from './migrations/1786500000000-AddQueryPerformanceIndexes';
 
 describe('SQLite migrations', () => {
   let dataSource: DataSource | undefined;
@@ -21,6 +22,7 @@ describe('SQLite migrations', () => {
         Init1786353535155,
         Init1786353568233,
         AddMusicAndBgImage1786418900000,
+        AddQueryPerformanceIndexes1786500000000,
       ],
     });
     await dataSource.initialize();
@@ -40,6 +42,19 @@ describe('SQLite migrations', () => {
     expect(postColumns.some((column: { name: string }) => column.name === 'music')).toBe(true);
     expect(userColumns.some((column: { name: string }) => column.name === 'bgImage')).toBe(true);
     expect(userColumns.some((column: { name: string }) => column.name === 'bgMusic')).toBe(true);
+    const indexes = await dataSource.query(
+      `SELECT name FROM sqlite_master WHERE type = 'index' AND name LIKE 'IDX_%'`,
+    );
+    const indexNames = indexes.map((index: { name: string }) => index.name);
+    expect(indexNames).toEqual(expect.arrayContaining([
+      'IDX_posts_created_at',
+      'IDX_posts_like_count',
+      'IDX_posts_user_created_at',
+      'IDX_comments_post_created_at',
+      'IDX_comments_status_post',
+      'IDX_notifications_receiver_created_at',
+      'IDX_notifications_receiver_unread',
+    ]));
     expect(await dataSource.showMigrations()).toBe(false);
   });
 });

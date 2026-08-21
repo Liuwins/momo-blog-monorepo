@@ -337,6 +337,8 @@ Compose 的 backend 已配置 `/api/health` 健康检查，并要求 frontend �
 | 已处理 | 公开快照包含两个重复的初始化 migration，空库执行会在第二个 migration 创建已存在的 `comments` 表并失败 | 生产首次部署可能在迁移阶段失败 | 重复 migration 已改为兼容性 no-op；在内存 SQLite 空库和临时生产容器上验证三条 migration 可完整回放 |
 | 已处理 | Compose 只按容器启动顺序启动 frontend，健康接口即使数据库查询失败也返回 HTTP 200 | 迁移失败或数据库锁定时可能被误判为已部署 | backend 增加 healthcheck，frontend 等待 `service_healthy`；数据库异常返回 HTTP 503 |
 | 已处理 | `cleanup-images.sh` 只收集 `posts.images` 与 `users.avatar` 的引用 | 视频、动态配乐、背景图、背景音乐等仍在使用的文件可能被误删 | 已扩展到 videos/music/avatar/bgImage/bgMusic，并保持默认只报告模式 |
+| 已处理 | 首页动态列表逐条查询评论、点赞状态和点赞用户，页面动态数量增加时查询次数线性增长 | 数据量增大后首页响应时间和数据库负载上升 | 已按当前页批量读取关联数据；真实数据集响应基准仍待补齐 |
+| 已处理 | posts、comments、notifications 高频过滤/排序字段缺少专用索引 | 数据量增长后列表、审核和未读数查询需要更多扫描 | 已新增索引 migration，并在临时 SQLite 中验证创建；生产数据集查询计划仍待对比 |
 | 已处理 | 前端/后端旧 `ROADMAP.md` 曾写“通知中心 UI 未接”，但当前已有 `Notifications.vue`、通知 Pinia Store 和 Socket.IO 连接代码 | 旧路线图会误导维护 | 已收敛到根 `ROADMAP.md`，子项目文件改为入口说明 |
 | 已处理 | `GET /api/users/:id/posts` 会查询 `p.music`，但正常创建流程不写入 `music` | 个人页与首页的动态模型可能出现字段能力不一致 | 已随动态配乐修复统一创建、更新及各查询返回；阶段 2 仍需补回归测试 |
 | 已处理 | 前端配置了 Vitest，项目中未发现测试源码；后端没有测试脚本 | 关键鉴权、上传、审核和迁移缺少回归保护 | 已补前后端测试与 CI 基线；真实 GitHub CI、上传现场、WebSocket 现场和备份恢复仍需部署环境验收 |

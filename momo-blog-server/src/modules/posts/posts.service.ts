@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Post } from '../../entities/post.entity';
 import { Comment } from '../../entities/comment.entity';
 import { Like } from '../../entities/like.entity';
@@ -41,8 +41,27 @@ export class PostsService {
 
     const [data, total] = await qb.getManyAndCount();
 
-    const items = await Promise.all(
-      data.map(async (post) => ({
+    const postIds = data.map((post) => post.id);
+    const [comments, likes] = postIds.length
+      ? await Promise.all([
+          this.commentsRepo.find({
+            where: { postId: In(postIds) },
+            relations: ['user'],
+            order: { createdAt: 'ASC' },
+          }),
+          this.likesRepo.find({
+            where: { postId: In(postIds) },
+            relations: ['user'],
+            order: { createdAt: 'ASC' },
+          }),
+        ])
+      : [[], []];
+    const commentsByPost = this.groupByPostId(comments);
+    const likesByPost = this.groupByPostId(likes);
+    const items = data.map((post) => {
+      const postComments = commentsByPost.get(post.id) || [];
+      const postLikes = likesByPost.get(post.id) || [];
+      return {
         id: post.id,
         userId: post.userId,
         user: post.user
@@ -57,12 +76,12 @@ export class PostsService {
         likeCount: post.likeCount,
         commentCount: post.commentCount,
         liked: currentUserId
-          ? await this.likesRepo.exist({ where: { userId: currentUserId, postId: post.id } })
+          ? postLikes.some((like) => like.userId === currentUserId)
           : false,
-        comments: await this.getPreviewComments(post.id, currentUserId),
-        likeUsers: await this.getLikeUsers(post.id),
-      })),
-    );
+        comments: this.filterCommentsForUser(postComments.slice(0, 3), currentUserId),
+        likeUsers: this.formatLikeUsers(postLikes.slice(0, 8)),
+      };
+    });
 
     return { list: items, total };
   }
@@ -219,8 +238,22 @@ export class PostsService {
       relations: ['user'],
       take: 8,
     });
+    return this.formatLikeUsers(likes);
+  }
+
+  private formatLikeUsers(likes: Like[]) {
     return likes
       .filter((l) => l.user)
       .map((l) => ({ id: l.user.id, nickname: l.user.nickname }));
+  }
+
+  private groupByPostId<T extends { postId: number }>(rows: T[]) {
+    const grouped = new Map<number, T[]>();
+    for (const row of rows) {
+      const list = grouped.get(row.postId) || [];
+      list.push(row);
+      grouped.set(row.postId, list);
+    }
+    return grouped;
   }
 }
