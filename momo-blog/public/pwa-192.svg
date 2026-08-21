@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" role="img" aria-label="MomoBlog">
+  <rect width="192" height="192" rx="42" fill="#07c160"/>
+  <path d="M48 64c0-10 8-18 18-18h60c10 0 18 8 18 18v44c0 10-8 18-18 18H88l-22 18 5-18h-5c-10 0-18-8-18-18V64Z" fill="#fff"/>
+  <circle cx="82" cy="86" r="8" fill="#07c160"/>
+  <circle cx="110" cy="86" r="8" fill="#07c160"/>
+  <path d="M75 106c8 8 24 8 32 0" fill="none" stroke="#07c160" stroke-linecap="round" stroke-width="6"/>
+</svg>

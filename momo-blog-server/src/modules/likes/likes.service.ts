@@ -58,7 +58,7 @@ export class LikesService {
       }
 
       const like = likesRepo.create({ postId, userId: userId || null, visitorId: visitorId || '' });
-      await likesRepo.save(like);
+      const savedLike = await likesRepo.save(like);
       await postsRepo.increment({ id: postId }, 'likeCount', 1);
       const updated = await postsRepo.findOne({ where: { id: postId } });
       await queryRunner.commitTransaction();
@@ -71,6 +71,7 @@ export class LikesService {
             senderId: userId || null,
             type: NotificationType.LIKE,
             postId,
+            dedupeKey: `like:${savedLike.id}`,
           })
           .catch((err) => {
             this.logger.error(`点赞通知发送失败: ${err?.message || err}`);

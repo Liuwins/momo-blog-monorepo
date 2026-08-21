@@ -153,4 +153,34 @@ describe('CommentsService', () => {
     expect(queryRunner.rollbackTransaction).toHaveBeenCalledOnce();
     expect(queryRunner.release).toHaveBeenCalledOnce();
   });
+
+  it('回复评论时校验目标并分别通知博主和原评论作者', async () => {
+    postsService.findById.mockResolvedValue({
+      id: 10,
+      userId: 3,
+      user: { nickname: '博主' },
+    });
+    commentsRepo.findOne.mockResolvedValue({
+      id: 7,
+      postId: 10,
+      userId: 5,
+      nickname: '原作者',
+      user: { nickname: '原作者' },
+    });
+
+    await service.create(10, {
+      postId: 10,
+      content: '回复内容',
+      replyToId: 7,
+      replyToNickname: '客户端伪造昵称',
+    }, 4);
+
+    expect(txCommentsRepo.create).toHaveBeenCalledWith(expect.objectContaining({
+      replyToId: 7,
+      replyToNickname: '原作者',
+    }));
+    expect(notificationsService.createAndNotify).toHaveBeenCalledTimes(2);
+    expect(notificationsService.createAndNotify).toHaveBeenCalledWith(expect.objectContaining({ receiverId: 3, type: 'reply' }));
+    expect(notificationsService.createAndNotify).toHaveBeenCalledWith(expect.objectContaining({ receiverId: 5, type: 'reply' }));
+  });
 });

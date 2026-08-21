@@ -5,6 +5,7 @@ import {
   CreateDateColumn,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { User } from './user.entity';
 
@@ -45,6 +46,11 @@ export class Notification {
 
   @Column({ type: 'text', default: '' })
   content: string;
+
+  // 同一个业务事件重试时复用已有通知，避免未读列表重复刷屏。
+  @Index('UQ_notifications_dedupe_key', { unique: true })
+  @Column({ type: 'varchar', nullable: true })
+  dedupeKey: string | null;
 
   @CreateDateColumn()
   createdAt: Date;

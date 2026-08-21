@@ -28,6 +28,8 @@ JWT_SECRET=<至少 16 字符的强随机密钥>
 CLIENT_ORIGIN=https://<实际域名>
 SITE_URL=https://<实际域名>
 UPLOAD_DIR=/app/images
+# 本机验证或已有宿主机反向代理时可改为 39080；生产默认 80
+FRONTEND_HOST_PORT=80
 ```
 
 不要提交 `.env`。`JWT_SECRET`、`CLIENT_ORIGIN` 或 `SITE_URL` 缺失、格式不正确时，Compose 或后端会拒绝启动。
@@ -49,11 +51,13 @@ Compose 会使用前端 Dockerfile 的构建上下文 `../momo-blog`，并持久
 - `backend-images`：上传图片、视频、音频；
 - `backend-logs`：应用日志。
 
+`FRONTEND_HOST_PORT` 和 `FRONTEND_HOST_BIND` 只控制前端 Nginx 容器的宿主机映射，不改变容器内端口 80。这样本机已有 80 端口占用时可用临时端口验证完整前后端链路；生产仍建议由受控的 80/443 入口承载。
+
 Compose 默认将后端绑定到宿主机回环地址（`127.0.0.1:3001:3001`），不会直接暴露到公网；如前端和后端只在 Compose 网络内通信，也可以移除该端口映射。不要改回 `3001:3001`，除非已确认有额外的防火墙和鉴权边界。
 
 后端配置了 Docker healthcheck：只有 `/api/health` 返回 HTTP 200 且数据库查询成功后，前端容器才会启动。迁移失败、数据库锁定或数据目录不可用时，后端会保持 unhealthy，前端不会被误判为已部署；此时先查看 `docker compose ... logs --tail=100 backend`，修复配置或恢复备份后再重启。
 
-前端 Dockerfile 使用 `SITE_URL` 作为 `VITE_SITE_URL` 构建参数，首页 Open Graph 元数据和后端分享页因此使用同一站点地址。生产部署前请在 Compose 使用的 `.env` 中同时配置 `SITE_URL` 与 `CLIENT_ORIGIN`。
+前端 Dockerfile 使用 `SITE_URL` 作为 `VITE_SITE_URL` 构建参数，首页 Open Graph 元数据和后端分享页因此使用同一站点地址。前端同时发布 `manifest.webmanifest`、PWA 图标和生产 Service Worker；Nginx 响应头包含 CSP、Permissions-Policy 和 Referrer-Policy。生产部署前请在 Compose 使用的 `.env` 中同时配置 `SITE_URL` 与 `CLIENT_ORIGIN`。
 
 ## 4. 验证
 
@@ -70,6 +74,25 @@ docker compose -f momo-blog-server/docker-compose.yml ps
 - `docker compose ... ps` 中 backend 状态为 `healthy`、frontend 状态为 `running`；
 - `/socket.io/` 代理包含 `Upgrade` 和 `Connection: upgrade`；
 - 图片、视频、音频可以通过 `/images/` 访问。
+
+本地端口被占用时，可使用不入库的环境变量验证 Compose 代理链路：
+
+```powershell
+$env:SITE_URL = 'http://localhost:39080'
+$env:CLIENT_ORIGIN = 'http://localhost:39080'
+$env:JWT_SECRET = '仅用于本地验证的长度足够随机值'
+$env:FRONTEND_HOST_BIND = '127.0.0.1'
+$env:FRONTEND_HOST_PORT = '39080'
+$env:BACKEND_HOST_PORT = '39081'
+docker compose --project-name momoblog-check -f momo-blog-server/docker-compose.yml up -d --build
+Invoke-WebRequest http://localhost:39080/ -TimeoutSec 10
+Invoke-WebRequest http://localhost:39080/manifest.webmanifest -TimeoutSec 10
+Invoke-WebRequest http://localhost:39080/sw.js -TimeoutSec 10
+Invoke-WebRequest http://localhost:39080/api/health -TimeoutSec 10
+docker compose --project-name momoblog-check -f momo-blog-server/docker-compose.yml down -v
+```
+
+2026-08-22 本地回归已通过前后端测试、lint、typecheck 和 build；Node 22 完整 Compose 重建因外部 Debian 镜像源下载失败中断，因此上述容器链路、真实域名和目标服务器结果仍须按环境重新记录，不能仅凭构建日志宣称部署完成。
 
 ## 5. 非 Docker 部署
 
@@ -125,11 +148,12 @@ location /socket.io/ {
 
 ## 6. 数据库、备份与回滚
 
-- 生产模式使用 TypeORM migration，不要打开 `synchronize`。
+- 生产模式使用 TypeORM migration，不要打开 `synchronize`。阶段 6 新增 `AddPostRevisions` 和 `AddNotificationDedupeKey` 两个迁移，升级前必须先完成数据库与媒体成对备份。
 - `node dist/seed.js` 会清空数据，仅允许用于空库演示初始化；必须通过 `SEED_ADMIN_PASSWORD` 注入一次性演示密码，不能使用生产凭据。
 - 执行升级前先备份 SQLite 和上传目录；`backup.sh` 会生成 SQLite 一致性快照 `momoblog.db.<时间>.bak` 和媒体归档 `momoblog-images.<时间>.tar.gz`，恢复时必须同时恢复数据库与媒体文件。
 - Compose 首次启动或版本升级时会在 Nest 应用初始化阶段执行生产 migration；迁移失败不会跳过错误继续提供流量。确认日志中出现应用监听日志且 healthcheck 为 `healthy` 后，才视为迁移完成。
 - `backup.sh`、`cert-check.sh`、`cleanup-images.sh` 和 `restore-media-quarantine.sh` 是参数化部署脚本模板：路径、域名、OSS 凭据和引用扫描范围需按环境审查；媒体清理默认只报告，完成成对备份后设置 `BACKUP_CONFIRMED=1 DRY_RUN=0` 会把候选移入隔离区而非直接删除，可用恢复脚本回滚。
+- 上传接口除 MIME 白名单和大小限制外，还检查文件头、图片真实解码及像素上限；视频/音频容器签名不满足要求时会拒绝。真实服务器仍需用代表性文件复测。
 
 备份恢复演练示例（已在隔离容器验证；目标部署机执行时不要覆盖生产目录）：
 

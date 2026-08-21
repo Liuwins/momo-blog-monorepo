@@ -13,6 +13,26 @@ export class PostsController {
     return this.postsService.findAll(query, req.user?.id);
   }
 
+  @Get(':id/history')
+  @UseGuards(JwtAuthGuard)
+  async getHistory(@Param('id') id: number, @Request() req) {
+    const history = await this.postsService.getHistory(id, req.user.id);
+    if (!history) throw new NotFoundException('文章不存在或无权查看历史');
+    return history;
+  }
+
+  @Post(':id/history/:revisionId/restore')
+  @UseGuards(JwtAuthGuard)
+  async restoreHistory(
+    @Param('id') id: number,
+    @Param('revisionId') revisionId: number,
+    @Request() req,
+  ) {
+    const result = await this.postsService.restoreRevision(id, revisionId, req.user.id);
+    if (!result) throw new NotFoundException('历史版本不存在或无权恢复');
+    return result;
+  }
+
   @Get('tags')
   getTags(@Query('period') period?: string) {
     return this.postsService.getAllTags(period === 'week' ? 'week' : 'all');

@@ -42,6 +42,7 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const MAX_TOTAL_SIZE = 30 * 1024 * 1024; // 总计 30MB
 const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 单个视频 50MB
 const MAX_AUDIO_SIZE = 20 * 1024 * 1024; // 单个音频 20MB
+const MAX_IMAGE_PIXELS = 25_000_000; // 防止异常图片造成解码内存压力
 
 // 多尺寸配置：缩略图（列表用）、中图（详情页）、原图（点击放大）
 const SIZES = {
@@ -87,6 +88,57 @@ export class UploadController {
     return uploadDir;
   }
 
+  /** 使用文件头识别真实类型，避免只信任浏览器声明的 MIME。 */
+  private async assertDetectedMime(buffer: Buffer, declaredMime: string, allowed: Record<string, string>) {
+    const aliases: Record<string, string> = {
+      'image/jpg': 'image/jpeg',
+      'audio/mp3': 'audio/mpeg',
+      'audio/x-wav': 'audio/wav',
+      'audio/wave': 'audio/wav',
+      'audio/x-m4a': 'audio/mp4',
+      'audio/x-flac': 'audio/flac',
+    };
+    const declared = aliases[declaredMime] || declaredMime;
+    if (!allowed[declaredMime] || !this.matchesMediaSignature(buffer, declared)) {
+      throw new HttpException('无法确认文件真实类型，已拒绝上传', HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  private matchesMediaSignature(buffer: Buffer, mime: string) {
+    const startsWith = (...bytes: number[]) => bytes.every((byte, index) => buffer[index] === byte);
+    const asciiAt = (value: string, offset: number) => buffer.subarray(offset, offset + value.length).toString('ascii') === value;
+    const isFtyp = buffer.length >= 12 && asciiAt('ftyp', 4);
+    const isWebm = startsWith(0x1a, 0x45, 0xdf, 0xa3);
+    switch (mime) {
+      case 'image/jpeg':
+        return startsWith(0xff, 0xd8, 0xff);
+      case 'image/png':
+        return startsWith(0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a);
+      case 'image/gif':
+        return asciiAt('GIF8', 0);
+      case 'image/webp':
+        return asciiAt('RIFF', 0) && asciiAt('WEBP', 8);
+      case 'video/mp4':
+      case 'audio/mp4':
+        return isFtyp;
+      case 'video/webm':
+      case 'audio/webm':
+        return isWebm;
+      case 'audio/mpeg':
+        return asciiAt('ID3', 0) || (buffer.length > 1 && buffer[0] === 0xff && (buffer[1] & 0xe0) === 0xe0);
+      case 'audio/wav':
+        return asciiAt('RIFF', 0) && asciiAt('WAVE', 8);
+      case 'audio/ogg':
+        return asciiAt('OggS', 0);
+      case 'audio/aac':
+        return buffer.length > 1 && buffer[0] === 0xff && (buffer[1] & 0xf6) === 0xf0;
+      case 'audio/flac':
+        return asciiAt('fLaC', 0);
+      default:
+        return false;
+    }
+  }
+
   @Post()
   @UseInterceptors(
     FilesInterceptor('files', 9, {
@@ -127,9 +179,13 @@ export class UploadController {
 
       // 校验文件是否为有效图片（通过 sharp 解码）
       try {
-        await sharp(file.buffer).metadata();
+        await this.assertDetectedMime(file.buffer, file.mimetype, ALLOWED_MIME);
+        const metadata = await sharp(file.buffer).metadata();
+        if ((metadata.width || 0) * (metadata.height || 0) > MAX_IMAGE_PIXELS) {
+          throw new HttpException('图片像素总量超过安全上限', HttpStatus.BAD_REQUEST);
+        }
       } catch {
-        throw new HttpException('文件不是有效的图片或已损坏', HttpStatus.BAD_REQUEST);
+        throw new HttpException('文件不是有效的图片、类型不匹配或已损坏', HttpStatus.BAD_REQUEST);
       }
 
       // 随机文件名（统一转 webp 格式，体积更小）
@@ -213,6 +269,7 @@ export class UploadController {
     if (!ext) {
       throw new HttpException(`不支持的视频类型: ${file.mimetype}`, HttpStatus.BAD_REQUEST);
     }
+    await this.assertDetectedMime(file.buffer, file.mimetype, ALLOWED_VIDEO_MIME);
 
     const uploadDir = this.ensureUploadDir();
 
@@ -252,6 +309,7 @@ export class UploadController {
       this.logger.warn(`音频上传失败：不支持的类型 ${file.mimetype}`);
       throw new HttpException(`不支持的音频类型: ${file.mimetype}`, HttpStatus.BAD_REQUEST);
     }
+    await this.assertDetectedMime(file.buffer, file.mimetype, ALLOWED_AUDIO_MIME);
 
     const uploadDir = this.ensureUploadDir();
 

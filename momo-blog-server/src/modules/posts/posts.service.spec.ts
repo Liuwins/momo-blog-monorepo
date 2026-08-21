@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { PostsService } from './posts.service';
+import { PostRevision } from '../../entities/post-revision.entity';
 
 describe('PostsService', () => {
   const queryBuilder = {
@@ -20,6 +21,8 @@ describe('PostsService', () => {
   };
   const commentsRepo = { find: vi.fn() };
   const likesRepo = { find: vi.fn(), exist: vi.fn() };
+  const revisionsRepo = { find: vi.fn(), findOne: vi.fn(), save: vi.fn() };
+  const dataSource = { transaction: vi.fn() };
   let service: PostsService;
 
   beforeEach(() => {
@@ -29,9 +32,15 @@ describe('PostsService', () => {
     commentsRepo.find.mockResolvedValue([]);
     likesRepo.find.mockResolvedValue([]);
     likesRepo.exist.mockResolvedValue(false);
+    revisionsRepo.find.mockResolvedValue([]);
+    revisionsRepo.findOne.mockResolvedValue(null);
+    revisionsRepo.save.mockImplementation(async (value) => ({ id: 99, createdAt: new Date(), ...value }));
+    dataSource.transaction.mockImplementation(async (callback) => callback({
+      getRepository: (entity) => (entity === PostRevision ? revisionsRepo : postsRepo),
+    }));
     postsRepo.create.mockImplementation((value) => ({ id: 10, ...value }));
     postsRepo.save.mockImplementation(async (value) => value);
-    service = new PostsService(postsRepo as any, commentsRepo as any, likesRepo as any);
+    service = new PostsService(postsRepo as any, commentsRepo as any, likesRepo as any, revisionsRepo as any, dataSource as any);
   });
 
   it('创建动态时保留配乐并在返回值中序列化', async () => {
@@ -73,6 +82,44 @@ describe('PostsService', () => {
     await expect(service.delete(10, 4)).resolves.toBe(false);
     expect(postsRepo.save).not.toHaveBeenCalled();
     expect(postsRepo.remove).not.toHaveBeenCalled();
+  });
+
+  it('编辑动态前保存快照，并可列出和恢复历史版本', async () => {
+    const current = {
+      id: 10,
+      userId: 3,
+      content: '旧内容',
+      images: ['/images/old.webp'],
+      videos: [],
+      music: '',
+      tags: ['旧'],
+    };
+    postsRepo.findOne.mockResolvedValue(current);
+    const detail = { ...current, user: { id: 3, nickname: '博主', avatar: '' } };
+    postsRepo.findOne.mockResolvedValueOnce(current).mockResolvedValueOnce(detail);
+    await service.update(10, 3, { content: '新内容' });
+    expect(revisionsRepo.save).toHaveBeenCalledWith(expect.objectContaining({
+      postId: 10,
+      userId: 3,
+      snapshot: expect.stringContaining('旧内容'),
+    }));
+
+    revisionsRepo.find.mockResolvedValue([
+      { id: 99, createdAt: new Date(), snapshot: JSON.stringify({ content: '旧内容', images: ['/images/old.webp'], videos: [], music: '', tags: ['旧'] }) },
+    ]);
+    postsRepo.findOne.mockResolvedValue(current);
+    await expect(service.getHistory(10, 3)).resolves.toEqual([
+      expect.objectContaining({ id: 99, contentPreview: '旧内容', imagesCount: 1, tags: ['旧'] }),
+    ]);
+
+    revisionsRepo.findOne.mockResolvedValue({
+      id: 99,
+      postId: 10,
+      snapshot: JSON.stringify({ content: '恢复内容', images: [], videos: [], music: '', tags: ['恢复'] }),
+    });
+    postsRepo.findOne.mockResolvedValue(current);
+    await service.restoreRevision(10, 99, 3);
+    expect(postsRepo.save).toHaveBeenCalledWith(expect.objectContaining({ content: '恢复内容', tags: ['恢复'] }));
   });
 
   it('首页列表批量读取评论和点赞，避免每条动态触发额外查询', async () => {

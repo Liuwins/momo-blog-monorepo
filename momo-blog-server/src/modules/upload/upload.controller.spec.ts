@@ -34,19 +34,21 @@ describe('UploadController', () => {
   });
 
   it('保存视频并限制音频文件名中的危险字符', async () => {
+    const mp4Header = Buffer.from('000000186674797069736f6d0000020069736f6d69736f32', 'hex');
+    const mp3Header = Buffer.from('49443304000000000000', 'hex');
     const video = await controller.uploadVideo({
       mimetype: 'video/mp4',
       originalname: 'clip.mp4',
-      buffer: Buffer.from('video'),
-      size: 5,
+      buffer: mp4Header,
+      size: mp4Header.length,
     } as any);
     expect(video.url).toMatch(/^\/images\/[a-f0-9]{16}\/video\.mp4$/);
 
     const audio = await controller.uploadAudio({
       mimetype: 'audio/mpeg',
       originalname: '../晚间:*?\u0000散步.mp3',
-      buffer: Buffer.from('audio'),
-      size: 5,
+      buffer: mp3Header,
+      size: mp3Header.length,
     } as any);
     expect(audio.name).not.toMatch(/[/:*?]/);
     expect(audio.url).toMatch(/^\/images\/[a-f0-9]{16}\/.*\.mp3$/);

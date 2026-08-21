@@ -161,7 +161,41 @@
           <MusicPlayer :src="musicUrl" />
         </div>
       </div>
+
+      <van-button v-if="isEdit" block plain type="primary" class="history-btn" @click="openHistory">
+        查看编辑历史
+      </van-button>
     </div>
+
+    <van-popup v-model:show="historyVisible" position="bottom" round :style="{ height: '62dvh' }">
+      <div class="history-popup">
+        <div class="history-header">
+          <span>编辑历史</span>
+          <van-icon
+            name="cross"
+            aria-label="关闭历史"
+            role="button"
+            tabindex="0"
+            @click="historyVisible = false"
+            @keydown.enter.prevent="historyVisible = false"
+          />
+        </div>
+        <van-loading v-if="historyLoading" class="history-loading" />
+        <van-empty v-else-if="historyList.length === 0" description="暂无历史版本" />
+        <van-cell-group v-else inset>
+          <van-cell
+            v-for="item in historyList"
+            :key="item.id"
+            :title="formatHistoryDate(item.createdAt)"
+            :label="item.contentPreview || '无文字内容'"
+          >
+            <template #value>
+              <van-button size="small" plain type="primary" @click="restoreHistory(item)">恢复</van-button>
+            </template>
+          </van-cell>
+        </van-cell-group>
+      </div>
+    </van-popup>
   </div>
 </template>
 
@@ -170,7 +204,14 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { showConfirmDialog } from 'vant'
 import { toast } from '@/utils/toast'
-import { createPost, getPostDetail, updatePost, getTags } from '@/api/post'
+import {
+  createPost,
+  getPostDetail,
+  updatePost,
+  getPostHistory,
+  restorePostHistory,
+  getTags
+} from '@/api/post'
 import { uploadImages, uploadVideo, uploadAudio } from '@/api/upload'
 import { compressImage } from '@/utils/compress'
 import { getDraft, saveDraft, clearDraft } from '@/utils/storage'
@@ -188,6 +229,9 @@ const customTag = ref('')
 const existingTags = ref([])
 const musicUrl = ref('')
 const audioUploading = ref(false)
+const historyVisible = ref(false)
+const historyLoading = ref(false)
+const historyList = ref([])
 
 const isEdit = computed(() => !!route.query.edit)
 const postId = computed(() => Number(route.query.edit))
@@ -338,6 +382,57 @@ function beforeRead(file) {
     return false
   }
   return true
+}
+
+async function openHistory() {
+  if (!isEdit.value || historyLoading.value) return
+  historyVisible.value = true
+  historyLoading.value = true
+  try {
+    historyList.value = (await getPostHistory(postId.value)) || []
+  } catch {
+    historyList.value = []
+    toast.fail('历史版本加载失败')
+  } finally {
+    historyLoading.value = false
+  }
+}
+
+function formatHistoryDate(value) {
+  return value ? new Date(value).toLocaleString('zh-CN', { hour12: false }) : '未知时间'
+}
+
+async function restoreHistory(item) {
+  try {
+    await showConfirmDialog({
+      title: '恢复历史版本',
+      message: '当前编辑内容会先保存为新的历史版本，确定恢复吗？'
+    })
+  } catch {
+    return
+  }
+  try {
+    const restored = await restorePostHistory(postId.value, item.id)
+    content.value = restored.content || ''
+    selectedTags.value = restored.tags || []
+    musicUrl.value = restored.music || ''
+    fileList.value = (restored.images || []).map((url) => ({
+      url,
+      status: 'done',
+      serverUrl: url,
+      isImage: true
+    }))
+    videoList.value = (restored.videos || []).map((url) => ({
+      url,
+      status: 'done',
+      serverUrl: url,
+      isVideo: true
+    }))
+    historyVisible.value = false
+    toast.success('已恢复历史版本')
+  } catch {
+    toast.fail('历史版本恢复失败')
+  }
 }
 
 async function afterRead(file) {
@@ -646,5 +741,31 @@ async function handlePublish() {
 
 .music-preview {
   margin-top: 8px;
+}
+
+.history-btn {
+  margin-top: 20px;
+}
+
+.history-popup {
+  min-height: 100%;
+  padding-top: 4px;
+}
+
+.history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  color: var(--text-primary);
+  font-size: 16px;
+  font-weight: 500;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.history-loading {
+  display: flex;
+  justify-content: center;
+  padding: 36px;
 }
 </style>

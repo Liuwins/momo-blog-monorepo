@@ -40,7 +40,7 @@ describe('LikesService', () => {
     vi.clearAllMocks();
     dataSource.createQueryRunner.mockReturnValue(queryRunner);
     likesRepo.create.mockImplementation((value) => ({ id: 20, ...value }));
-    likesRepo.save.mockResolvedValue(undefined);
+    likesRepo.save.mockResolvedValue({ id: 20, postId: 10, userId: 4 });
     likesRepo.remove.mockResolvedValue(undefined);
     postsRepo.increment.mockResolvedValue(undefined);
     postsRepo.findOne.mockResolvedValue({ id: 10, userId: 3, likeCount: 1 });

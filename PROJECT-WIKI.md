@@ -1,6 +1,6 @@
 # MomoBlog 项目 WIKI
 
-> 基于工作区当前源码和本地验证，更新日期：2026-08-21；当前仓库已经迁移为 Monorepo。
+> 基于工作区当前源码和本地验证，更新日期：2026-08-22；当前仓库已经迁移为 Monorepo。
 >
 > 本文以代码和下方验证记录为准，不以旧的 README、ROADMAP 或部署手册替代运行事实。线上域名、真实服务器和生产数据仍未验收；文末单列了已确认的待处理风险。
 
@@ -24,7 +24,7 @@ MomoBlog 是一个移动端优先、朋友圈风格的个人动态博客。它�
 
 | 子项目 | 分支 | 当前提交 |
 | --- | --- | --- |
-| Monorepo 根 | `master` | 本地包含 3 个待推送优化提交，依赖安全和文档改动仍待最终审查 |
+| Monorepo 根 | `master` | 已领先远程 4 个本地提交；阶段 6 改动尚未提交，公开推送仍待最终审查 |
 | 前端导入基线 | `legacy/frontend-master-20260821` | `425f812`（2026-08-12） |
 | 后端导入基线 | `legacy/server-master-20260821` | `d60173c`（2026-08-12） |
 
@@ -96,6 +96,7 @@ SQLite 存在单文件写锁，PM2 配置已明确指定 `instances: 1`。不要
 - 个人主页支持封面、头像、签名、背景图、背景音乐、暗黑模式和关注关系。
 - 前端本地保存收藏、浏览历史、发布草稿、主题、游客身份与游客昵称，不会同步到后端。
 - 天气组件会申请定位，再调用 BigDataCloud 逆地理编码和 Open-Meteo；数据在本地缓存 30 分钟。此功能依赖浏览器定位权限，生产环境应使用 HTTPS。
+- 生产构建会提供 PWA manifest、192/512 图标和 Service Worker；Service Worker 只在生产环境注册，开发环境不会接管 Vite 资源。
 
 ## 4. 前端结构与状态流
 
@@ -156,9 +157,10 @@ momo-blog/src/
 | `comments` | `postId`、`userId`、`visitorId`、`nickname`、`content`、`status`、回复字段 | 评论状态为 `pending`、`approved`、`rejected` |
 | `likes` | `userId`、`visitorId`、`postId` | `(userId, postId)` 与 `(visitorId, postId)` 唯一，防止重复点赞 |
 | `follows` | `followerId`、`followingId` | 关注关系唯一，两个 ID 均有索引 |
-| `notifications` | `receiverId`、`senderId`、`type`、`postId`、`content`、`isRead` | 点赞、评论、回复通知 |
+| `notifications` | `receiverId`、`senderId`、`type`、`postId`、`content`、`dedupeKey`、`isRead` | 点赞、评论、回复通知；`dedupeKey` 用于同一事件去重 |
+| `post_revisions` | `postId`、`editorId`、`content`、`images`、`videos`、`music`、`tags`、`createdAt` | 动态编辑前的完整快照，可恢复为历史版本 |
 
-生产模式下 `TypeORM` 会关闭 `synchronize`，并在启动时自动执行 `src/migrations/` 中的迁移；开发模式会启用 `synchronize`。实体变更必须同步补充可回放的迁移，不要依赖生产自动同步表结构。
+生产模式下 `TypeORM` 会关闭 `synchronize`，并在启动时自动执行 `src/migrations/` 中的迁移；开发模式会启用 `synchronize`。阶段 6 新增 `1786600000000-AddPostRevisions` 和 `1786601000000-AddNotificationDedupeKey`；实体变更必须同步补充可回放的迁移，不要依赖生产自动同步表结构。
 
 ## 6. REST API 速查
 
@@ -185,6 +187,8 @@ momo-blog/src/
 | `POST` | `/api/posts` | JWT | 新建动态；内容、图片、视频至少有一项；内容最多 2000 字，标签最多 5 个 |
 | `PUT` | `/api/posts/:id` | JWT + 本人 | 更新动态 |
 | `DELETE` | `/api/posts/:id` | JWT + 本人 | 删除动态 |
+| `GET` | `/api/posts/:id/history` | JWT + 本人 | 查询动态编辑历史 |
+| `POST` | `/api/posts/:id/history/:revisionId/restore` | JWT + 本人 | 将指定历史快照恢复为当前动态，并保存当前快照 |
 | `POST` | `/api/posts/:id/like` | 可选 JWT | 登录用户按用户 ID 点赞；访客需传 `visitorId` |
 | `GET` | `/api/posts/:id/like-status` | 可选 JWT | 查询当前用户或访客的点赞状态 |
 
@@ -245,7 +249,7 @@ UPLOAD_DIR/
 
 ### 前置条件
 
-- 使用 Node.js 22（项目 Docker 镜像使用 Node 20，但本地无 `.nvmrc` 时按工作区约定使用 Node 22）。
+- 使用 Node.js 22（项目 Docker 镜像和 CI 均使用 Node 22；本地无 `.nvmrc` 时按工作区约定使用 Node 22）。
 - 两个子项目分别安装依赖。
 - 后端必须配置长度至少 16 字符的 `JWT_SECRET`，否则会拒绝启动。
 
@@ -324,8 +328,9 @@ Compose 的 backend 已配置 `/api/health` 健康检查，并要求 frontend �
 - JWT 密钥缺失或少于 16 字符时，后端启动失败；JWT 签发有效期为 7 天。
 - 密码使用 bcrypt（10 轮）哈希；用户对外响应会剔除 `password`。
 - Helmet 安全头已启用；HTTP CORS 使用显式 `CLIENT_ORIGIN`，并开启 credentials。
-- 上传入口同时受 JWT 和管理员守卫保护，校验 MIME、文件大小和图片真实可解码性；文件名使用随机目录并过滤危险字符。
+- 上传入口同时受 JWT 和管理员守卫保护，校验 MIME、文件大小、文件头、图片真实解码和最大像素数；视频/音频检查基础容器签名，文件名使用随机目录并过滤危险字符。
 - 动态分享页会转义用户文本，降低存储型 XSS 风险；Markdown 渲染端使用 DOMPurify。
+- 前端 Nginx 发布 CSP、Permissions-Policy 和 Referrer-Policy；CSP 使用 `script-src 'self'`，不依赖 `unsafe-inline` 脚本。
 
 ## 11. 已确认的代码与文档差异 / 风险
 
@@ -349,6 +354,9 @@ Compose 的 backend 已配置 `/api/health` 健康检查，并要求 frontend �
 | 已处理 | `GET /api/users/:id/posts` 会查询 `p.music`，但正常创建流程不写入 `music` | 个人页与首页的动态模型可能出现字段能力不一致 | 已随动态配乐修复统一创建、更新及各查询返回，并有回归测试覆盖 |
 | 已处理 | 前端配置了 Vitest，项目中未发现测试源码；后端没有测试脚本 | 关键鉴权、上传、审核和迁移缺少回归保护 | 已补前后端测试与 CI 基线；真实 GitHub CI、上传现场、WebSocket 现场和备份恢复仍需部署环境验收 |
 | 已处理 | 前后端依赖审计发现上传解析链和前端测试工具链存在高危告警 | 公开仓库安装依赖后可能暴露已知 DoS/原型污染风险 | 已移除未使用的 `mockjs`，并通过 lockfile override 修复前端和后端生产链高危依赖；Nest 10 剩余中低风险需单独评估 Nest 11 升级 |
+| 已处理 | 动态编辑没有可审计的历史版本，误编辑只能手工重建 | 内容恢复困难，管理员无法比较或回滚 | 新增 `post_revisions` 快照、历史查询和事务化恢复接口；真实服务器 migration 与大数据量保留策略仍需复演 |
+| 已处理 | 点赞、评论和回复可能为同一事件重复创建通知，回复目标也可能跨动态伪造 | 通知中心噪声增加，可能把回复错误关联到其他动态 | 新增 `dedupeKey` 唯一去重、动态归属校验，并分别通知动态作者与原评论登录用户作者 |
+| 已处理 | 仅依赖上传 MIME 值无法识别伪造扩展名或损坏图片 | 可能保存不可播放或不符合声明类型的媒体 | 新增文件头、图片解码、像素上限和视频/音频容器签名校验；真实设备和代表性媒体仍需现场复测 |
 
 ## 12. 维护约定
 
@@ -379,8 +387,8 @@ Compose 的 backend 已配置 `/api/health` 健康检查，并要求 frontend �
 ## 14. 本次分析的验证范围
 
 - 已完成静态审阅：Monorepo 目录、依赖锁文件、配置、路由、前端 API、状态管理、控制器、服务、实体、迁移、Docker/Nginx 和运维脚本。
-- 本地自动化验证：前端测试 5/5、lint 0 error/0 warning、build 通过；后端测试 27/27、typecheck/build 通过；Compose 插值和 Bash 脚本语法通过；前后端依赖审计门禁通过（后端生产链无高危项）。
-- 本地运行验证：临时生产后端镜像构建成功，容器 `/api/health` 返回 200；查询基准、媒体报告和隔离恢复演练通过；390×844 视口首页、详情评论栏、登录和发布路由守卫冒烟通过，控制台错误数为 0。
-- 未完成：真实域名/HTTPS、目标服务器迁移、真实 WebSocket、上传、备份恢复和 GitHub 远程 CI 验收；本地验证不替代这些现场验证。
+- 本地自动化验证：前端测试 5/5、lint 0 error/0 warning、build 通过；后端测试 31/31、typecheck/build 通过；Compose 插值和 Bash 脚本语法通过；前端及后端生产依赖高危级别审计门禁通过（后端仍有 Nest 10 的低/中危告警，不能用 `npm audit fix --force` 处理）。
+- 本地运行验证：此前临时生产后端镜像和 `/api/health` 曾验证通过；查询基准、媒体报告和隔离恢复演练通过；390×844 视口首页、详情评论栏、登录和发布路由守卫冒烟通过，控制台错误数为 0。当前 Node 22 完整 Compose 重建因外部 Debian 镜像源下载失败中断，未将其记为成功。
+- 未完成：真实域名/HTTPS、目标服务器迁移、真实 WebSocket、上传、备份恢复、真实 PWA 安装和 GitHub 远程 CI 验收；本地验证不替代这些现场验证。
 
 在把本文用于上线决策前，应按实际部署环境补做上述运行验证。

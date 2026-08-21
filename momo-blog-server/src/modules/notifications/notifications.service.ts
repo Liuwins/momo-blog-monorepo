@@ -14,16 +14,44 @@ export class NotificationsService {
     private gateway: NotificationsGateway,
   ) {}
 
+  private async saveDeduplicated(data: {
+    receiverId: number;
+    senderId: number | null;
+    type: NotificationType;
+    postId?: number;
+    content?: string;
+    dedupeKey?: string;
+  }) {
+    if (data.dedupeKey) {
+      const existing = await this.notificationsRepo.findOne({
+        where: { dedupeKey: data.dedupeKey },
+      });
+      if (existing) return { notification: existing, created: false };
+    }
+    const notification = this.notificationsRepo.create(data);
+    try {
+      return { notification: await this.notificationsRepo.save(notification), created: true };
+    } catch (error) {
+      // 并发重试可能在两次 findOne 之间命中唯一索引，返回已存在事件即可。
+      if (data.dedupeKey) {
+        const existing = await this.notificationsRepo.findOne({
+          where: { dedupeKey: data.dedupeKey },
+        });
+        if (existing) return { notification: existing, created: false };
+      }
+      throw error;
+    }
+  }
+
   async create(data: {
     receiverId: number;
     senderId: number | null;
     type: NotificationType;
     postId?: number;
     content?: string;
+    dedupeKey?: string;
   }) {
-    const notification = this.notificationsRepo.create(data);
-    const saved = await this.notificationsRepo.save(notification);
-    return saved;
+    return (await this.saveDeduplicated(data)).notification;
   }
 
   // 创建通知并实时推送给接收者（通知 + 更新未读数）
@@ -33,8 +61,10 @@ export class NotificationsService {
     type: NotificationType;
     postId?: number;
     content?: string;
+    dedupeKey?: string;
   }) {
-    const saved = await this.create(data);
+    const { notification: saved, created } = await this.saveDeduplicated(data);
+    if (!created) return saved;
     this.gateway.sendNotification(data.receiverId, saved);
     const count = await this.getUnreadCount(data.receiverId);
     this.gateway.sendUnreadCount(data.receiverId, count);

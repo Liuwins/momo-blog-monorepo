@@ -1,9 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { Post } from '../../entities/post.entity';
 import { Comment } from '../../entities/comment.entity';
 import { Like } from '../../entities/like.entity';
+import { PostRevision } from '../../entities/post-revision.entity';
 import { CreatePostDto, UpdatePostDto, QueryPostsDto } from './dto';
 
 @Injectable()
@@ -15,6 +16,9 @@ export class PostsService {
     private commentsRepo: Repository<Comment>,
     @InjectRepository(Like)
     private likesRepo: Repository<Like>,
+    @InjectRepository(PostRevision)
+    private revisionsRepo: Repository<PostRevision>,
+    private dataSource: DataSource,
   ) {}
 
   async findAll(query: QueryPostsDto, currentUserId?: number) {
@@ -145,14 +149,84 @@ export class PostsService {
   }
 
   async update(id: number, userId: number, dto: UpdatePostDto) {
+    const changed =
+      dto.content !== undefined ||
+      dto.images !== undefined ||
+      dto.videos !== undefined ||
+      dto.music !== undefined ||
+      dto.tags !== undefined;
+    const updated = await this.dataSource.transaction(async (manager) => {
+      const postsRepo = manager.getRepository(Post);
+      const revisionsRepo = manager.getRepository(PostRevision);
+      const post = await postsRepo.findOne({ where: { id } });
+      if (!post || post.userId !== userId) return false;
+      const before = this.createRevisionSnapshot(post);
+      if (dto.content !== undefined) post.content = dto.content;
+      if (dto.images !== undefined) post.images = dto.images;
+      if (dto.videos !== undefined) post.videos = dto.videos;
+      if (dto.music !== undefined) post.music = dto.music;
+      if (dto.tags !== undefined) post.tags = dto.tags;
+      await postsRepo.save(post);
+      if (changed) {
+        await revisionsRepo.save({
+          postId: id,
+          userId,
+          snapshot: JSON.stringify(before),
+        });
+      }
+      return true;
+    });
+    if (!updated) return null;
+    return this.findById(id, userId);
+  }
+
+  async getHistory(id: number, userId: number) {
     const post = await this.postsRepo.findOne({ where: { id } });
     if (!post || post.userId !== userId) return null;
-    if (dto.content !== undefined) post.content = dto.content;
-    if (dto.images !== undefined) post.images = dto.images;
-    if (dto.videos !== undefined) post.videos = dto.videos;
-    if (dto.music !== undefined) post.music = dto.music;
-    if (dto.tags !== undefined) post.tags = dto.tags;
-    await this.postsRepo.save(post);
+    const revisions = await this.revisionsRepo.find({
+      where: { postId: id },
+      order: { createdAt: 'DESC' },
+      take: 50,
+    });
+    return revisions.map((revision) => {
+      const snapshot = this.parseRevisionSnapshot(revision.snapshot);
+      return {
+        id: revision.id,
+        createdAt: revision.createdAt,
+        contentPreview: snapshot.content.slice(0, 120),
+        imagesCount: snapshot.images.length,
+        videosCount: snapshot.videos.length,
+        tags: snapshot.tags,
+        music: snapshot.music,
+      };
+    });
+  }
+
+  async restoreRevision(id: number, revisionId: number, userId: number) {
+    const restored = await this.dataSource.transaction(async (manager) => {
+      const postsRepo = manager.getRepository(Post);
+      const revisionsRepo = manager.getRepository(PostRevision);
+      const post = await postsRepo.findOne({ where: { id } });
+      if (!post || post.userId !== userId) return false;
+      const revision = await revisionsRepo.findOne({ where: { id: revisionId, postId: id } });
+      if (!revision) return false;
+
+      const current = this.createRevisionSnapshot(post);
+      const snapshot = this.parseRevisionSnapshot(revision.snapshot);
+      await revisionsRepo.save({
+        postId: id,
+        userId,
+        snapshot: JSON.stringify(current),
+      });
+      post.content = snapshot.content;
+      post.images = snapshot.images;
+      post.videos = snapshot.videos;
+      post.music = snapshot.music;
+      post.tags = snapshot.tags;
+      await postsRepo.save(post);
+      return true;
+    });
+    if (!restored) return null;
     return this.findById(id, userId);
   }
 
@@ -271,5 +345,30 @@ export class PostsService {
       grouped.set(row.postId, list);
     }
     return grouped;
+  }
+
+  private createRevisionSnapshot(post: Post) {
+    return {
+      content: post.content || '',
+      images: Array.isArray(post.images) ? [...post.images] : [],
+      videos: Array.isArray(post.videos) ? [...post.videos] : [],
+      music: post.music || '',
+      tags: Array.isArray(post.tags) ? [...post.tags] : [],
+    };
+  }
+
+  private parseRevisionSnapshot(raw: string) {
+    try {
+      const value = JSON.parse(raw) as Partial<ReturnType<PostsService['createRevisionSnapshot']>>;
+      return {
+        content: typeof value.content === 'string' ? value.content : '',
+        images: Array.isArray(value.images) ? value.images.filter((item): item is string => typeof item === 'string') : [],
+        videos: Array.isArray(value.videos) ? value.videos.filter((item): item is string => typeof item === 'string') : [],
+        music: typeof value.music === 'string' ? value.music : '',
+        tags: Array.isArray(value.tags) ? value.tags.filter((item): item is string => typeof item === 'string') : [],
+      };
+    } catch {
+      return { content: '', images: [], videos: [], music: '', tags: [] };
+    }
   }
 }

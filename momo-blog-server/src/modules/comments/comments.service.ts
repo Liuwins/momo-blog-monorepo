@@ -27,6 +27,17 @@ export class CommentsService {
       throw new HttpException('文章不存在', HttpStatus.NOT_FOUND);
     }
 
+    let replyTarget: Comment | null = null;
+    if (dto.replyToId) {
+      replyTarget = await this.commentsRepo.findOne({
+        where: { id: dto.replyToId, postId },
+        relations: ['user'],
+      });
+      if (!replyTarget) {
+        throw new HttpException('回复目标不存在或不属于该文章', HttpStatus.BAD_REQUEST);
+      }
+    }
+
     // 登录用户使用其昵称，未登录使用 dto.nickname
     const nickname = userId
       ? (post.user?.nickname || dto.nickname || '匿名')
@@ -47,8 +58,8 @@ export class CommentsService {
         visitorId: dto.visitorId || '',
         content: dto.content,
         status: CommentStatus.PENDING,
-        replyToId: dto.replyToId,
-        replyToNickname: dto.replyToNickname,
+        replyToId: replyTarget?.id,
+        replyToNickname: replyTarget?.nickname || replyTarget?.user?.nickname || dto.replyToNickname || '',
       });
 
       saved = await commentsRepo.save(comment);
@@ -61,16 +72,20 @@ export class CommentsService {
       await queryRunner.release();
     }
 
-    // 通知博主（自己评论自己不通知）
-    if (post.userId && userId !== post.userId) {
-      const type = dto.replyToId ? NotificationType.REPLY : NotificationType.COMMENT;
+    // 普通评论通知博主；回复同时通知原评论作者和博主（去重后最多两条）。
+    const type = replyTarget ? NotificationType.REPLY : NotificationType.COMMENT;
+    const receiverIds = new Set<number>();
+    if (post.userId && userId !== post.userId) receiverIds.add(post.userId);
+    if (replyTarget?.userId && userId !== replyTarget.userId) receiverIds.add(replyTarget.userId);
+    for (const receiverId of receiverIds) {
       this.notificationsService
         .createAndNotify({
-          receiverId: post.userId,
+          receiverId,
           senderId: userId || null,
           type,
           postId,
           content: dto.content,
+          dedupeKey: `${type}:${saved.id}:${receiverId}`,
         })
         .catch((err) => {
           this.logger.error(`评论通知发送失败: ${err?.message || err}`);

@@ -1,5 +1,5 @@
 # ===== 构建阶段：vite build =====
-FROM node:20-slim AS builder
+FROM node:22-slim AS builder
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci

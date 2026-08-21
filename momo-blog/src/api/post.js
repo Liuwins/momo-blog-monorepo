@@ -16,6 +16,14 @@ export function updatePost(id, data) {
   return request.put(`/posts/${id}`, data)
 }
 
+export function getPostHistory(id) {
+  return request.get(`/posts/${id}/history`)
+}
+
+export function restorePostHistory(id, revisionId) {
+  return request.post(`/posts/${id}/history/${revisionId}/restore`)
+}
+
 export function deletePost(id) {
   return request.delete(`/posts/${id}`)
 }
