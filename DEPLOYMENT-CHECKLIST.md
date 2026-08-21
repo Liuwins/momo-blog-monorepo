@@ -2,7 +2,7 @@
 
 本文档已收敛为兼容入口。请先阅读根目录 [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)，再根据真实服务器环境执行检查。
 
-最小上线检查：
+最小上线检查（详细脱敏记录请使用 [`docs/PRODUCTION-ACCEPTANCE.md`](docs/PRODUCTION-ACCEPTANCE.md)）：
 
 - [ ] `JWT_SECRET` 使用强随机值且未提交；
 - [ ] `CLIENT_ORIGIN` 与实际 HTTPS 域名一致；

@@ -42,6 +42,7 @@ npm run dev
 - [PROJECT-WIKI.md](PROJECT-WIKI.md)：当前源码、路由、API、数据模型、鉴权和风险说明。
 - [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)：当前 Docker Compose 与非 Docker 部署基线。
 - [docs/OPTIMIZATION-PLAN.md](docs/OPTIMIZATION-PLAN.md)：分阶段优化任务、验收标准和回滚约定。
+- [docs/PRODUCTION-ACCEPTANCE.md](docs/PRODUCTION-ACCEPTANCE.md)：真实域名和目标服务器现场验收的脱敏记录模板。
 - [ROADMAP.md](ROADMAP.md)：当前已实现能力和待办事项。
 - [CHANGELOG.md](CHANGELOG.md)：公开变更记录与发布约定。
 
