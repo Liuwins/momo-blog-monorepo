@@ -54,4 +54,4 @@ npm run dev
 - 前端：`https://github.com/Liuwins/momo-blog.git`
 - 后端：`https://github.com/Liuwins/momo-blog-server.git`
 
-两个旧仓库继续作为历史归档，不应把 Monorepo 根分支强推覆盖到其中任何一个。Monorepo 应使用新的 GitHub 仓库作为 `origin`。
+两个旧仓库继续作为历史来源，不应把 Monorepo 根分支强推覆盖到其中任何一个；当前只在本地禁用 legacy push，GitHub Archived 设置和旧仓库 README 迁移链接需用户确认后再变更。Monorepo 应使用新的 GitHub 仓库作为 `origin`。

@@ -20,6 +20,8 @@
 - 部署：Docker Compose、前端 Nginx、SQLite migration、上传目录和备份脚本；隔离端口完整 Compose、migration、健康检查、上传和 WebSocket 已验证，尚未完成真实服务器、生产域名和目标数据恢复演练。
 - 仓库：公开仓库只发布当前快照；旧仓库作为历史归档，不再推送业务代码。
 
+外部仓库状态检查（2026-08-22）：`Liuwins/momo-blog` 和 `Liuwins/momo-blog-server` 当前仍为公开仓库且 GitHub `archived=false`，README 尚未添加 Monorepo 链接。代码仓库已通过禁用 legacy push 避免继续推送；是否在 GitHub 设置 Archived、是否更新旧仓库 README，属于公开外部变更，需用户明确确认后执行。
+
 ## 阶段 0：基线与发布治理
 
 目标：让后续优化可回滚、可审阅、可定位。
