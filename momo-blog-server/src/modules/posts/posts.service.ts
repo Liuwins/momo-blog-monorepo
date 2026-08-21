@@ -109,7 +109,7 @@ export class PostsService {
         liked: currentUserId
           ? postLikes.some((like) => like.userId === currentUserId)
           : false,
-        comments: this.filterCommentsForUser(postComments.slice(0, 3), currentUserId),
+        comments: this.filterCommentsForUser(postComments, currentUserId).slice(0, 3),
         likeUsers: this.formatLikeUsers(postLikes.slice(0, 8)),
       };
     });

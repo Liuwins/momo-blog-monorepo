@@ -199,6 +199,36 @@ describe('PostsService', () => {
     );
   });
 
+  it('匿名动态摘要先过滤不可见评论再截取前三条', async () => {
+    queryBuilder.getManyAndCount.mockResolvedValue([
+      [{
+        id: 10,
+        userId: 3,
+        content: '动态',
+        images: [],
+        videos: [],
+        music: '',
+        tags: [],
+        likeCount: 0,
+        commentCount: 4,
+        user: { id: 3, nickname: '博主', avatar: '' },
+      }],
+      1,
+    ]);
+    commentsRepo.find.mockResolvedValue([
+      { id: 1, postId: 10, nickname: '待审1', content: '隐藏', status: 'pending', user: null },
+      { id: 2, postId: 10, nickname: '待审2', content: '隐藏', status: 'pending', user: null },
+      { id: 3, postId: 10, nickname: '拒绝', content: '隐藏', status: 'rejected', user: null },
+      { id: 4, postId: 10, nickname: '已审', content: '显示', status: 'approved', user: null },
+    ]);
+
+    const result = await service.findAll({ page: 1, pageSize: 10 } as any);
+
+    expect(result.list[0].comments).toEqual([
+      expect.objectContaining({ id: 4, content: '显示', status: 'approved' }),
+    ]);
+  });
+
   it('个人动态复用统一序列化并保留当前用户点赞状态', async () => {
     queryBuilder.getManyAndCount.mockResolvedValue([
       [{
