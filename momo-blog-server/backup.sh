@@ -23,9 +23,20 @@ DATE=$(date +%Y%m%d_%H%M)
 BACKUP_FILE="$BACKUP_DIR/momoblog.db.$DATE.bak"
 MEDIA_BACKUP_FILE="$BACKUP_DIR/momoblog-images.$DATE.tar.gz"
 
-# 保留本地最近7天（数据库和媒体归档成对清理）
-find "$BACKUP_DIR" -name "momoblog.db.*" -mtime +7 -delete
-find "$BACKUP_DIR" -name "momoblog-images.*.tar.gz" -mtime +7 -delete
+# 保留本地最近 7 天：只有同一时间戳的数据库与媒体归档都存在且都过期时才成对清理。
+# 孤立备份不自动删除，避免破坏最后一个可恢复的单边证据。
+for db_backup in "$BACKUP_DIR"/momoblog.db.*.bak; do
+  [ -f "$db_backup" ] || continue
+  stamp=${db_backup##*/momoblog.db.}
+  stamp=${stamp%.bak}
+  media_backup="$BACKUP_DIR/momoblog-images.$stamp.tar.gz"
+  if [ -f "$media_backup" ] \
+    && find "$db_backup" -maxdepth 0 -type f -mtime +7 -print -quit | grep -q . \
+    && find "$media_backup" -maxdepth 0 -type f -mtime +7 -print -quit | grep -q .; then
+    rm -- "$db_backup" "$media_backup"
+    echo "已清理成对过期备份：$stamp"
+  fi
+done
 
 # 必须使用 SQLite backup，避免在线数据库直接 cp 产生不一致快照。
 if ! command -v sqlite3 >/dev/null 2>&1; then

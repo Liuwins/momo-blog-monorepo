@@ -165,7 +165,7 @@ location /socket.io/ {
 - `node dist/seed.js` 会清空数据，仅允许用于空库演示初始化；必须通过 `SEED_ADMIN_PASSWORD` 注入一次性演示密码，不能使用生产凭据。
 - 执行升级前先备份 SQLite 和上传目录；`backup.sh` 会生成 SQLite 一致性快照 `momoblog.db.<时间>.bak` 和媒体归档 `momoblog-images.<时间>.tar.gz`，恢复时必须同时恢复数据库与媒体文件。
 - Compose 首次启动或版本升级时会在 Nest 应用初始化阶段执行生产 migration；迁移失败不会跳过错误继续提供流量。确认日志中出现应用监听日志且 healthcheck 为 `healthy` 后，才视为迁移完成。
-- `backup.sh`、`cert-check.sh`、`cleanup-images.sh`、`restore-media-quarantine.sh` 和 `scripts/production-smoke.sh` 是参数化部署脚本模板：路径、域名、OSS 凭据和引用扫描范围需按环境审查；数据库或上传目录缺失时备份会失败，媒体清理默认只报告，完成成对备份后设置 `BACKUP_CONFIRMED=1 DRY_RUN=0` 会把候选移入隔离区而非直接删除，可用恢复脚本回滚。
+- `backup.sh`、`cert-check.sh`、`cleanup-images.sh`、`restore-media-quarantine.sh` 和 `scripts/production-smoke.sh` 是参数化部署脚本模板：路径、域名、OSS 凭据和引用扫描范围需按环境审查；数据库或上传目录缺失时备份会失败，过期备份只有数据库与媒体归档成对存在时才会自动清理，孤立备份会保留并提示人工处理；媒体清理默认只报告，完成成对备份后设置 `BACKUP_CONFIRMED=1 DRY_RUN=0` 会把候选移入隔离区而非直接删除，可用恢复脚本回滚。
 - 上传接口除 MIME 白名单和大小限制外，还检查文件头、图片真实解码及像素上限；视频/音频容器签名不满足要求时会拒绝。真实服务器仍需用代表性文件复测。
 
 备份恢复演练示例（已在隔离容器验证；目标部署机执行时不要覆盖生产目录）：

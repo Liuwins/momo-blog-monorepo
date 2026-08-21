@@ -81,7 +81,7 @@
 - 已新增 `.github/workflows/ci.yml`，执行前端 lint/test/build、后端 test/typecheck/build、运维脚本语法检查和高危依赖审计；代码提交 `9fb8fc7` 的 GitHub Actions（运行 `32511440234`）已通过前端、后端和仓库卫生三项门禁，随后公共校验器重构的回归运行 `32511825831` 也已通过。
 - 后端已补 Auth、Posts、Comments、Upload、WebSocket、Migration、Health、DTO、环境校验、媒体引用、路径 ID 和评论关联 ID 校验、通知去重回归测试（48 条）；本地与远程测试、类型检查和构建均已通过。
 - CI 已增加公开仓库敏感/生成文件扫描、Compose 插值校验和恢复脚本语法检查；远程结果已验收，Actions 已升级到 v5 以消除 Node 20 运行时警告。
-- 运维脚本已补齐缺失数据库/媒体目录的成对备份保护、证书续期失败处理、空媒体目录兼容和绝对 URL 引用归一化；新增不带凭据的 `scripts/production-smoke.sh`，用于目标域名现场检查首页、安全头、manifest、Service Worker、健康接口和 Socket.IO polling。
+- 运维脚本已补齐缺失数据库/媒体目录的成对备份保护、成对过期备份清理、证书续期失败处理、空媒体目录兼容和绝对 URL 引用归一化；新增不带凭据的 `scripts/production-smoke.sh`，用于目标域名现场检查首页、安全头、manifest、Service Worker、健康接口和 Socket.IO polling。
 - 公开仓库环境文件治理已收紧：前端仅保留 `.env.example` 模板，CI 拒绝提交其他 `.env`、数据库、证书、密钥和截图文件。
 - 阶段 8 现场验收记录模板已加入 `docs/PRODUCTION-ACCEPTANCE.md`；未获得目标环境信息前只维护模板和待验收清单，不填写伪造结果。
 - 敏感文件门禁已提取为根目录 `scripts/repository-hygiene.mjs`，本地和 GitHub Actions 使用同一实现；它只检查已跟踪文件，不读取生产凭据。
