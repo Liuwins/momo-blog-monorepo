@@ -1,0 +1,166 @@
+:root {
+  /* 主题色 */
+  --theme-color: #07C160;
+  --theme-color-light: #06AD56;
+  --theme-color-bg: #f0f4fa;
+
+  /* 文字 */
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --text-light: #999999;
+  --text-lighter: #c8c9cc;
+  --text-link: #576b95;
+  --text-on-theme: #ffffff;
+
+  /* 背景 */
+  --bg-page: #f5f5f5;
+  --bg-card: #ffffff;
+  --bg-hover: #fafafa;
+  --bg-input: #f5f5f5;
+  --bg-tag: #f0f4fa;
+  --bg-tag-active: #e8f5e9;
+  --bg-skeleton: #f0f0f0;
+  --bg-skeleton-shine: #e6e6e6;
+
+  /* 边框 */
+  --border-color: #eeeeee;
+  --border-light: #f0f0f0;
+
+  /* 热门排名色 */
+  --rank-1: #ff4d4f;
+  --rank-2: #ff7a00;
+  --rank-3: #faad14;
+
+  /* 尺寸 */
+  --font-size-body: 15px;
+  --font-size-small: 12px;
+  --spacing-card: 8px;
+  --spacing-padding: 16px;
+  --radius-img: 4px;
+  --max-width: 480px;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --max-width: 640px;
+    --font-size-body: 16px;
+  }
+}
+
+@media (min-width: 1200px) {
+  :root {
+    --max-width: 800px;
+  }
+}
+
+/* ========== 暗黑模式变量覆盖 ========== */
+html[data-theme='dark'] {
+  --theme-color: #1aac66;
+  --theme-color-light: #159055;
+  --theme-color-bg: #1a2e22;
+
+  --text-primary: #e8e8e8;
+  --text-secondary: #b0b0b0;
+  --text-light: #888888;
+  --text-lighter: #666666;
+  --text-link: #7a9cc6;
+  --text-on-theme: #ffffff;
+
+  --bg-page: #121212;
+  --bg-card: #1e1e1e;
+  --bg-hover: #2a2a2a;
+  --bg-input: #2a2a2a;
+  --bg-tag: #1a2e22;
+  --bg-tag-active: #234d35;
+  --bg-skeleton: #2a2a2a;
+  --bg-skeleton-shine: #3a3a3a;
+
+  --border-color: #2e2e2e;
+  --border-light: #2a2a2a;
+
+  --rank-1: #ff7875;
+  --rank-2: #ffa940;
+  --rank-3: #ffc53d;
+}
+
+html[data-theme='dark'] body {
+  background-color: var(--bg-page);
+  color: var(--text-primary);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: var(--font-size-body);
+  color: var(--text-primary);
+  background-color: var(--bg-page);
+  -webkit-font-smoothing: antialiased;
+}
+
+.page-container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  min-height: 100dvh;
+  background-color: var(--bg-card);
+  position: relative;
+}
+
+/* ========== 自定义 Toast（仿微信/字节风格） ========== */
+.custom-toast {
+  min-width: 100px !important;
+  max-width: 260px !important;
+  padding: 12px 16px !important;
+  border-radius: 10px !important;
+  background: rgba(25, 25, 25, 0.92) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18) !important;
+  will-change: opacity;
+}
+
+.custom-toast .van-toast__text {
+  color: #fff !important;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+  margin-top: 6px !important;
+}
+
+.custom-toast .van-icon {
+  font-size: 28px !important;
+  color: #fff !important;
+}
+
+.custom-toast .van-icon-success {
+  color: #52c41a !important;
+}
+
+.custom-toast .van-icon-cross {
+  color: #ff4d4f !important;
+}
+
+.custom-toast .van-icon-info-o {
+  color: #faad14 !important;
+}
+
+/* 入场动画：纯 opacity，避免 scale 导致重排 */
+.van-toast-fade-enter-active {
+  animation: toast-in 0.18s ease-out;
+}
+
+.van-toast-fade-leave-active {
+  animation: toast-out 0.15s ease-in;
+}
+
+@keyframes toast-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes toast-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}

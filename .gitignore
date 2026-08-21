@@ -1,0 +1,17 @@
+# 本地 IDE / AI 工具状态
+/.idea/
+/.codebuddy/
+/.workbuddy/
+
+# 临时截图与截图脚本（不属于产品资源）
+/home-*.png
+/cdp-shot.cjs
+**/screenshots/
+**/*screenshot*.png
+**/*screenshot*.jpg
+**/*screenshot*.jpeg
+**/cdp-shot.cjs
+
+# Git 迁移与恢复文件
+/*.bundle
+*-pre-monorepo-*/
