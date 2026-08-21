@@ -131,7 +131,7 @@
       <div class="comment-popup">
         <div class="comment-header">
           <span>评论 ({{ currentComments.length }})</span>
-          <van-icon name="cross" @click="showCommentPopup = false" />
+          <van-icon name="cross" aria-label="关闭评论" role="button" tabindex="0" @click="showCommentPopup = false" @keydown.enter.prevent="showCommentPopup = false" />
         </div>
         <div ref="commentBodyRef" class="comment-body">
           <div v-if="currentComments.length === 0" class="comment-empty">暂无评论</div>
@@ -185,7 +185,7 @@
         <div class="comment-input-bar">
           <div v-if="replyTo" class="reply-tag">
             <span>回复 @{{ replyTo.nickname }}</span>
-            <van-icon name="cross" @click="clearReply" />
+            <van-icon name="cross" aria-label="取消回复" role="button" tabindex="0" @click="clearReply" @keydown.enter.prevent="clearReply" />
           </div>
           <!-- 未登录时输入昵称 -->
           <div v-if="!userStore.isLoggedIn" class="nickname-input">
@@ -230,8 +230,6 @@ import {
   getComments,
   createComment,
   deleteComment,
-  toggleLike,
-  getLikeStatus,
   approveComment,
   rejectComment
 } from '@/api/post'
@@ -1035,7 +1033,8 @@ async function handleRejectComment(comment) {
 
 .comment-input-bar {
   border-top: 1px solid var(--border-light);
-  padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px));
+  padding: 8px 12px max(8px, env(safe-area-inset-bottom, 0px));
+  scroll-margin-bottom: 12px;
 }
 
 .nickname-input {

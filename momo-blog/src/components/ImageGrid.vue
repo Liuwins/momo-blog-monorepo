@@ -51,16 +51,6 @@ function getOrigUrl(url) {
   return url // images 数组里存的就是原图 URL
 }
 
-// 中图 URL（详情页用）
-function getMidUrl(url) {
-  if (!url) return ''
-  const match = url.match(/^(\/images\/[^/]+\/)orig\.(webp|gif)$/)
-  if (match) {
-    return `${match[1]}mid.${match[2] === 'gif' ? 'gif' : 'webp'}`
-  }
-  return url
-}
-
 function itemStyle(_index) {
   if (props.images.length === 1) {
     return { width: '100%', maxWidth: '280px', height: 'auto', aspectRatio: '1' }

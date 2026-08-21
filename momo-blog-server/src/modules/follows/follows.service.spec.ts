@@ -6,6 +6,7 @@ describe('FollowsService', () => {
     findOne: vi.fn(),
     create: vi.fn(),
     save: vi.fn(),
+    upsert: vi.fn(),
     delete: vi.fn(),
     exist: vi.fn(),
     count: vi.fn(),
@@ -48,5 +49,23 @@ describe('FollowsService', () => {
     );
     expect(postsService.formatList).toHaveBeenCalledWith([{ id: 10, userId: 8 }], 1, 4);
     expect(result).toEqual({ list: [{ id: 10, liked: true }], total: 1 });
+  });
+
+  it('关注使用数据库 upsert 保证重复请求幂等', async () => {
+    followsRepo.upsert.mockResolvedValue({ identifiers: [], generatedMaps: [], raw: [] });
+
+    await expect(service.follow(4, 8)).resolves.toEqual({ followed: true });
+
+    expect(followsRepo.upsert).toHaveBeenCalledWith(
+      { followerId: 4, followingId: 8 },
+      ['followerId', 'followingId'],
+    );
+    expect(followsRepo.findOne).not.toHaveBeenCalled();
+    expect(followsRepo.save).not.toHaveBeenCalled();
+  });
+
+  it('禁止关注自己且不写入数据库', async () => {
+    await expect(service.follow(4, 4)).rejects.toMatchObject({ status: 400 });
+    expect(followsRepo.upsert).not.toHaveBeenCalled();
   });
 });

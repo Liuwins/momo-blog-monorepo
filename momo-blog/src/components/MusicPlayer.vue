@@ -2,7 +2,15 @@
   <div v-if="src" class="music-player" :class="{ playing: isPlaying, loading: isLoading }">
     <!-- 黑胶唱片 + 播放控制 -->
     <div class="player-main">
-      <div class="vinyl-wrap" @click="togglePlay">
+      <div
+        class="vinyl-wrap"
+        role="button"
+        tabindex="0"
+        :aria-label="isPlaying ? '暂停音乐' : '播放音乐'"
+        @click="togglePlay"
+        @keydown.enter.prevent="togglePlay"
+        @keydown.space.prevent="togglePlay"
+      >
         <div class="vinyl" :class="{ spinning: isPlaying }">
           <div class="vinyl-grooves"></div>
           <div class="vinyl-label">
@@ -12,7 +20,7 @@
         <div class="vinyl-tonearm" :class="{ active: isPlaying }"></div>
       </div>
 
-      <div class="player-meta" @click="togglePlay">
+      <div class="player-meta" role="button" tabindex="0" @click="togglePlay" @keydown.enter.prevent="togglePlay" @keydown.space.prevent="togglePlay">
         <div class="meta-title">
           <span class="track-name">{{ displayName }}</span>
           <div v-if="isPlaying" class="equalizer">
@@ -37,7 +45,12 @@
         </div>
       </div>
 
-      <button class="loop-btn" :class="{ active: loop }" @click.stop="toggleLoop" aria-label="循环">
+      <button
+        class="loop-btn"
+        :class="{ active: loop }"
+        aria-label="循环"
+        @click.stop="toggleLoop"
+      >
         <van-icon name="replay" size="15" />
       </button>
     </div>
@@ -45,8 +58,8 @@
     <!-- 进度条 -->
     <div class="progress-row">
       <div
-        class="progress-track"
         ref="progressRef"
+        class="progress-track"
         @click="onSeek"
         @touchstart="onSeekStart"
         @touchmove="onSeekMove"

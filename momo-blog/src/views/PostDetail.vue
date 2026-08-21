@@ -74,7 +74,7 @@
     <div class="detail-input-bar">
       <div v-if="replyTo" class="reply-indicator">
         <span>回复 @{{ replyTo.nickname }}</span>
-        <van-icon name="cross" @click="clearReply" />
+        <van-icon name="cross" aria-label="取消回复" role="button" tabindex="0" @click="clearReply" @keydown.enter.prevent="clearReply" />
       </div>
       <!-- 未登录时输入昵称 -->
       <div v-if="!userStore.isLoggedIn" class="nickname-input">
@@ -428,7 +428,9 @@ function handleDeleted() {
   margin: 0 auto;
   background: var(--bg-card);
   border-top: 1px solid var(--border-light);
-  padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px));
+  padding: 8px 12px max(8px, env(safe-area-inset-bottom, 0px));
+  scroll-margin-bottom: 12px;
+  z-index: 20;
 }
 
 .nickname-input {
@@ -439,5 +441,16 @@ function handleDeleted() {
   background: #f5f5f5;
   border-radius: 4px;
   padding: 4px 8px;
+}
+
+@media (max-width: 480px) {
+  .detail-input-bar :deep(.van-field__control) {
+    min-height: 36px;
+  }
+
+  .detail-input-bar :deep(.van-button) {
+    min-height: 36px;
+    min-width: 56px;
+  }
 }
 </style>

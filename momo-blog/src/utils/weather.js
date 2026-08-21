@@ -134,7 +134,8 @@ export async function getLocationWeather() {
   // 1. 命中缓存直接返回
   const cached = readCache()
   if (cached) {
-    const { ts, ...rest } = cached
+    const rest = { ...cached }
+    delete rest.ts
     return rest
   }
 

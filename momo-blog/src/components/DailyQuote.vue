@@ -72,7 +72,8 @@ async function load() {
 
   const cached = readCache()
   if (cached) {
-    const { ts, ...rest } = cached
+    const rest = { ...cached }
+    delete rest.ts
     quote.value = rest
     loading.value = false
     return

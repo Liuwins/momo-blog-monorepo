@@ -8,6 +8,7 @@ IMAGES_DIR="${UPLOAD_DIR:-./images}"
 DB="${DB_PATH:-./data/momoblog.db}"
 LOG="${CLEANUP_LOG:-./logs/momo-blog-cleanup.log}"
 DRY_RUN="${DRY_RUN:-1}"
+QUARANTINE_DIR="${QUARANTINE_DIR:-./media-quarantine}"
 
 case "$IMAGES_DIR" in
   ''|'/'|'.'|'./')
@@ -15,6 +16,28 @@ case "$IMAGES_DIR" in
     exit 1
     ;;
 esac
+
+case "$QUARANTINE_DIR" in
+  ''|'/'|'.'|'./'|"$IMAGES_DIR"|"$IMAGES_DIR"/*)
+    echo "拒绝使用过宽或位于上传目录内的 QUARANTINE_DIR：$QUARANTINE_DIR" >&2
+    exit 1
+    ;;
+esac
+
+RUN_ID=$(date +%Y%m%d_%H%M%S)
+QUARANTINE_RUN="$QUARANTINE_DIR/$RUN_ID"
+if [ "$DRY_RUN" = "0" ]; then
+  if [ "${BACKUP_CONFIRMED:-0}" != "1" ]; then
+    echo "DRY_RUN=0 前必须先完成数据库和上传目录备份，并设置 BACKUP_CONFIRMED=1" >&2
+    exit 1
+  fi
+  mkdir -p "$QUARANTINE_DIR"
+  if ! mkdir "$QUARANTINE_RUN"; then
+    echo "隔离区批次已存在，请稍后重试：$QUARANTINE_RUN" >&2
+    exit 1
+  fi
+  printf 'run_id=%s\ncreated_at=%s\n' "$RUN_ID" "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" > "$QUARANTINE_RUN/MANIFEST"
+fi
 
 mkdir -p "$(dirname "$LOG")"
 
@@ -61,13 +84,9 @@ for item in "$IMAGES_DIR"/*; do
     # 未引用：默认只报告，显式 DRY_RUN=0 才删除
     size=$(du -sb "$item" 2>/dev/null | awk '{print $1}')
     if [ "$DRY_RUN" = "0" ]; then
-      if [ -d "$item" ]; then
-        rm -rf "$item"
-        echo "删除目录: $name ($(numfmt --to=iec $size 2>/dev/null || echo ${size}B))" >> "$LOG"
-      else
-        rm -f "$item"
-        echo "删除文件: $name ($(numfmt --to=iec $size 2>/dev/null || echo ${size}B))" >> "$LOG"
-      fi
+      mv -- "$item" "$QUARANTINE_RUN/$name"
+      printf '%s\t%s\t%s\n' "$name" "$QUARANTINE_RUN/$name" "$size" >> "$QUARANTINE_RUN/MANIFEST"
+      echo "移入隔离区: $name ($(numfmt --to=iec $size 2>/dev/null || echo ${size}B))" >> "$LOG"
     else
       echo "仅报告未引用项: $name ($(numfmt --to=iec $size 2>/dev/null || echo ${size}B))" >> "$LOG"
     fi
@@ -77,7 +96,11 @@ for item in "$IMAGES_DIR"/*; do
 done
 
 if [ $DELETED -gt 0 ]; then
-  echo "清理完成：删除 $DELETED 项，释放 $(numfmt --to=iec $DELETED_SIZE 2>/dev/null || echo ${DELETED_SIZE}B)" >> "$LOG"
+  if [ "$DRY_RUN" = "0" ]; then
+    echo "清理完成：移入隔离区 $DELETED 项，可从 $QUARANTINE_RUN 恢复；涉及 $(numfmt --to=iec $DELETED_SIZE 2>/dev/null || echo ${DELETED_SIZE}B)" >> "$LOG"
+  else
+    echo "清理完成：报告 $DELETED 项候选，共 $(numfmt --to=iec $DELETED_SIZE 2>/dev/null || echo ${DELETED_SIZE}B)" >> "$LOG"
+  fi
 else
   echo "清理完成：无需删除" >> "$LOG"
 fi

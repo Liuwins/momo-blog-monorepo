@@ -19,12 +19,11 @@ export class FollowsService {
     if (followerId === followingId) {
       throw new BadRequestException('不能关注自己');
     }
-    const existing = await this.followsRepo.findOne({
-      where: { followerId, followingId },
-    });
-    if (existing) return { followed: true };
-    const follow = this.followsRepo.create({ followerId, followingId });
-    await this.followsRepo.save(follow);
+    // 使用数据库唯一约束 + upsert 处理并发请求，避免“先查后写”竞态。
+    await this.followsRepo.upsert(
+      { followerId, followingId },
+      ['followerId', 'followingId'],
+    );
     return { followed: true };
   }
 

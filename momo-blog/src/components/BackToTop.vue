@@ -1,6 +1,15 @@
 <template>
   <transition name="backtop-fade">
-    <div v-show="visible" class="back-to-top" @click="scrollToTop">
+    <div
+      v-show="visible"
+      class="back-to-top"
+      role="button"
+      tabindex="0"
+      aria-label="返回顶部"
+      @click="scrollToTop"
+      @keydown.enter.prevent="scrollToTop"
+      @keydown.space.prevent="scrollToTop"
+    >
       <van-icon name="back-top" size="22" color="#07c160" />
     </div>
   </transition>

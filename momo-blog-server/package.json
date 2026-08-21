@@ -9,6 +9,8 @@
     "start:prod": "node dist/main.js",
     "test": "vitest run",
     "test:watch": "vitest",
+    "benchmark:queries": "node scripts/query-benchmark.js",
+    "media:report": "node scripts/media-report.js",
     "typecheck": "tsc --noEmit",
     "migration:run": "typeorm migration:run -d dist/data-source.js",
     "migration:generate": "typeorm migration:generate -d dist/data-source.js src/migrations/Init"

@@ -17,7 +17,12 @@
         v-if="comment.userId && comment.userId === currentUserId"
         name="cross"
         class="comment-delete"
+        role="button"
+        tabindex="0"
+        aria-label="删除评论"
         @click.stop="$emit('delete', comment)"
+        @keydown.enter.stop="$emit('delete', comment)"
+        @keydown.space.prevent.stop="$emit('delete', comment)"
       />
     </div>
     <div

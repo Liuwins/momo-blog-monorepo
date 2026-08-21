@@ -1,5 +1,14 @@
 <template>
-  <div class="like-button" @click="handleClick">
+  <div
+    class="like-button"
+    role="button"
+    tabindex="0"
+    :aria-pressed="liked"
+    :aria-label="liked ? '取消点赞' : '点赞'"
+    @click="handleClick"
+    @keydown.enter.prevent="handleClick"
+    @keydown.space.prevent="handleClick"
+  >
     <div class="like-icon-wrap">
       <van-icon
         :name="liked ? 'like' : 'like-o'"
@@ -118,6 +127,8 @@ async function handleClick() {
   align-items: center;
   gap: 4px;
   cursor: pointer;
+  min-height: 44px;
+  min-width: 64px;
   padding: 4px 8px;
   border-radius: 4px;
   user-select: none;
