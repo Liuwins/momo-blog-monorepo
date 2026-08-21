@@ -1,10 +1,6 @@
 <template>
   <div class="home-page">
-    <app-nav-bar title="MomoBlog">
-      <template #right>
-        <van-icon v-if="userStore.isLoggedIn" name="plus" size="20" class="nav-icon" @click="goPublish" />
-      </template>
-    </app-nav-bar>
+    <app-nav-bar title="MomoBlog" />
 
     <!-- 朋友圈风格封面：头像重叠在右下角，点击封面可更换 -->
     <div
@@ -223,7 +219,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { showConfirmDialog, showImagePreview } from 'vant'
@@ -249,9 +245,11 @@ import DailyQuote from '@/components/DailyQuote.vue'
 import SkeletonCard from '@/components/SkeletonCard.vue'
 import BackToTop from '@/components/BackToTop.vue'
 import CoverMusic from '@/components/CoverMusic.vue'
+import { useBackgroundMusicStore } from '@/stores/music'
 
 const router = useRouter()
 const userStore = useUserStore()
+const backgroundMusicStore = useBackgroundMusicStore()
 
 const refreshing = ref(false)
 const loading = ref(false)
@@ -310,6 +308,18 @@ const coverAvatar = computed(() =>
 // 背景音乐：管理员用 userInfo，游客用 ownerProfile；游客自动播放
 const bgMusicSrc = computed(() => userStore.userInfo?.bgMusic || ownerProfile.value?.bgMusic || '')
 const bgMusicAutoPlay = computed(() => !userStore.isLoggedIn)
+
+// 首页资料加载完成后同步背景音乐；同一首歌不重新加载，路由回来时保持进度。
+watch(
+  bgMusicSrc,
+  (src) => {
+    if (src) backgroundMusicStore.setTrack(src, { autoPlay: bgMusicAutoPlay.value })
+    else if (ownerProfile.value || (userStore.isLoggedIn && userStore.userInfo?.id)) {
+      backgroundMusicStore.clearTrack()
+    }
+  },
+  { immediate: true }
+)
 
 function goProfile() {
   if (userStore.isLoggedIn && userStore.userInfo?.id) {
@@ -492,14 +502,6 @@ function handleTagClick(tag) {
   filterByTag(tag)
 }
 
-function goPublish() {
-  if (userStore.isLoggedIn) {
-    router.push('/publish')
-  } else {
-    router.push({ path: '/login', query: { redirect: '/publish' } })
-  }
-}
-
 function handleDeleted(postId) {
   const idx = list.value.findIndex((p) => p.id === postId)
   if (idx !== -1) list.value.splice(idx, 1)
@@ -630,7 +632,7 @@ async function handleRejectComment(comment) {
 <style scoped>
 .home-page {
   min-height: 100dvh;
-  background: var(--bg-card);
+  background: var(--bg-page);
 }
 
 .empty-state {
@@ -640,14 +642,14 @@ async function handleRejectComment(comment) {
 /* ===== 朋友圈风格封面 ===== */
 .moments-cover {
   position: relative;
-  height: 220px;
+  height: 198px;
   /* 无封面时回退为主题色渐变 */
   background: linear-gradient(135deg, var(--theme-color) 0%, var(--theme-color-light) 100%);
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   /* 为右下角重叠的头像预留空间 */
-  margin-bottom: 42px;
+  margin-bottom: 34px;
 }
 
 .moments-cover.is-owner {
@@ -656,14 +658,14 @@ async function handleRejectComment(comment) {
 
 .cover-hint {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 14px;
+  right: 14px;
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 4px 10px;
-  border-radius: 14px;
-  background: rgba(0, 0, 0, 0.35);
+  padding: 5px 10px;
+  border-radius: 9px;
+  background: rgba(0, 0, 0, 0.28);
   color: #fff;
   font-size: 11px;
   backdrop-filter: blur(4px);
@@ -672,26 +674,26 @@ async function handleRejectComment(comment) {
 
 .cover-user {
   position: absolute;
-  right: 14px;
-  bottom: -28px;
+  right: 16px;
+  bottom: -23px;
   display: flex;
   align-items: flex-start;
-  gap: 10px;
+  gap: 12px;
 }
 
 .cover-nickname {
-  padding-top: 12px;
+  padding-top: 11px;
   color: #fff;
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 17px;
+  font-weight: 650;
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
 }
 
 .cover-avatar {
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
   border: 2px solid #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.16);
   background: var(--bg-page);
   cursor: pointer;
 }
@@ -704,16 +706,19 @@ async function handleRejectComment(comment) {
 
 .home-toolbar {
   background: var(--bg-card);
-  padding: 8px 12px;
+  padding: 12px 14px 13px;
   border-bottom: 1px solid var(--border-light);
+  box-shadow: 0 1px 0 rgba(38, 51, 45, 0.02);
 }
 
 /* 天气 + 一言 + 动态流切换同一行 */
 .toolbar-top {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 8px;
-  padding: 2px 0 8px;
+  min-height: 28px;
+  padding: 0 0 10px;
 }
 
 .toolbar-top :deep(.weather-widget) {
@@ -723,68 +728,89 @@ async function handleRejectComment(comment) {
 /* 动态流切换：分段胶囊样式 */
 .feed-tabs {
   display: flex;
-  gap: 4px;
-  padding: 3px;
-  border-radius: 16px;
-  background: var(--bg-page);
+  gap: 2px;
+  padding: 0;
   flex-shrink: 0;
 }
 
 .feed-tab {
-  font-size: 13px;
+  position: relative;
+  font-size: 12px;
   color: var(--text-secondary);
   cursor: pointer;
-  padding: 4px 14px;
-  border-radius: 13px;
-  transition: color 0.2s, background 0.2s, box-shadow 0.2s;
+  padding: 5px 6px 7px;
+  transition: color 0.2s;
   user-select: none;
 }
 
 .feed-tab.active {
   color: var(--theme-color);
   font-weight: 600;
-  background: var(--bg-card);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.feed-tab.active::after {
+  content: '';
+  position: absolute;
+  right: 6px;
+  bottom: 2px;
+  left: 6px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--theme-color);
 }
 
 .home-search {
-  padding: 0 0 8px;
+  padding: 0 0 10px;
   background: transparent;
 }
 
 .home-search :deep(.van-search__content) {
   background: var(--bg-input);
+  border-radius: 11px;
+}
+
+.home-search :deep(.van-field__control) {
+  color: var(--text-primary);
+}
+
+.home-search :deep(.van-search__action) {
+  color: var(--theme-color);
 }
 
 /* 排序切换：胶囊按钮 */
 .sort-tabs {
   display: flex;
-  gap: 8px;
+  gap: 3px;
+  width: fit-content;
+  padding: 3px;
+  border-radius: 10px;
+  background: var(--bg-page);
 }
 
 .sort-tab {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-secondary);
-  padding: 4px 14px;
-  border-radius: 14px;
-  background: var(--bg-page);
+  padding: 5px 13px;
+  border-radius: 8px;
+  background: transparent;
   cursor: pointer;
   transition: color 0.2s, background 0.2s;
   user-select: none;
 }
 
 .sort-tab.active {
-  color: var(--text-on-theme);
-  font-weight: 500;
-  background: var(--theme-color);
+  color: var(--theme-color);
+  font-weight: 600;
+  background: var(--bg-card);
+  box-shadow: 0 1px 4px rgba(38, 51, 45, 0.08);
 }
 
 .tag-filter {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
   overflow-x: auto;
-  padding: 8px 0 0;
+  padding: 10px 0 0;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
 }
@@ -798,11 +824,11 @@ async function handleRejectComment(comment) {
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-link);
   background: var(--bg-tag);
-  padding: 4px 12px;
-  border-radius: 14px;
+  padding: 5px 10px;
+  border-radius: 8px;
   cursor: pointer;
   user-select: none;
   white-space: nowrap;
@@ -810,17 +836,17 @@ async function handleRejectComment(comment) {
 
 /* 热门标签轻微高亮 */
 .tag-filter-item.hot {
-  background: #fff3e0;
-  color: var(--rank-2);
+  background: #f5f1e8;
+  color: #a7772a;
 }
 
 .tag-filter-item.active {
-  background: var(--text-link);
+  background: var(--theme-color);
   color: var(--text-on-theme);
 }
 
 .tag-filter-item.active.hot {
-  background: var(--rank-2);
+  background: var(--theme-color);
   color: var(--text-on-theme);
 }
 
@@ -838,7 +864,7 @@ async function handleRejectComment(comment) {
   text-align: center;
   border-radius: 50%;
   color: var(--text-light);
-  background: #e0e0e0;
+  background: #dfe6e1;
 }
 
 .hot-rank.rank-1 {
@@ -854,11 +880,6 @@ async function handleRejectComment(comment) {
 .hot-rank.rank-3 {
   color: var(--text-on-theme);
   background: #ffb300;
-}
-
-.nav-icon {
-  padding: 0 6px;
-  color: var(--text-primary);
 }
 
 .comment-popup {

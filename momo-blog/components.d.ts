@@ -12,6 +12,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AppNavBar: typeof import('./src/components/AppNavBar.vue')['default']
+    BackgroundMusicAudio: typeof import('./src/components/BackgroundMusicAudio.vue')['default']
     BackToTop: typeof import('./src/components/BackToTop.vue')['default']
     CommentList: typeof import('./src/components/CommentList.vue')['default']
     CoverMusic: typeof import('./src/components/CoverMusic.vue')['default']

@@ -203,15 +203,18 @@ async function handleMenuSelect(action) {
 <style scoped>
 .post-card {
   background: var(--bg-card);
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--border-light);
+  margin: 10px 10px 0;
+  padding: 15px 14px 13px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
 }
 
 .post-header {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
-  margin-bottom: 10px;
+  gap: 11px;
+  margin-bottom: 12px;
 }
 
 .avatar {
@@ -226,7 +229,7 @@ async function handleMenuSelect(action) {
 .nickname {
   font-size: 15px;
   font-weight: 500;
-  color: var(--text-primary);
+  color: var(--text-link);
   line-height: 1.4;
   cursor: pointer;
 }
@@ -254,7 +257,7 @@ async function handleMenuSelect(action) {
 
 .content-text {
   font-size: 15px;
-  line-height: 1.6;
+  line-height: 1.7;
   color: var(--text-primary);
   word-break: break-word;
 }
@@ -281,16 +284,16 @@ async function handleMenuSelect(action) {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-bottom: 10px;
+  margin: 2px 0 11px;
 }
 
 .tag-chip {
   display: inline-block;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-link);
   background: var(--bg-tag);
-  padding: 2px 10px;
-  border-radius: 12px;
+  padding: 4px 9px;
+  border-radius: 7px;
   cursor: pointer;
   user-select: none;
 }
@@ -306,17 +309,17 @@ async function handleMenuSelect(action) {
 .post-actions {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding-top: 8px;
+  gap: 8px;
+  padding-top: 10px;
   border-top: 1px solid var(--border-light);
 }
 
 .action-item {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   cursor: pointer;
-  padding: 4px 8px;
+  padding: 5px 8px;
   border-radius: 4px;
   user-select: none;
 }
@@ -351,9 +354,10 @@ async function handleMenuSelect(action) {
 
 .comment-preview {
   margin-top: 8px;
-  padding: 8px 12px;
-  background: var(--bg-page);
-  border-radius: 6px;
+  padding: 8px 10px;
+  background: var(--bg-hover);
+  border-left: 2px solid var(--bg-tag-active);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 }
 
 .comment-preview-item {

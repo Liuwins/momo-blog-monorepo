@@ -15,7 +15,7 @@
 
 ## 当前基线
 
-- 前端：Vue 3 + Vite，固定开发端口 `5175`；lint、test、build 已通过，lint 有 7 条既有 warning，当前无测试文件。
+- 前端：Vue 3 + Vite，固定开发端口 `5175`；lint、Vitest、build 已通过，lint 有 7 条既有 warning；当前已有路由守卫和全局音乐状态回归测试。
 - 后端：NestJS + TypeORM + better-sqlite3，默认端口 `3001`；typecheck、build 已通过。
 - 部署：Docker Compose、前端 Nginx、SQLite migration、上传目录和备份脚本；尚未完成真实服务器、WebSocket、上传和恢复演练。
 - 仓库：公开仓库只发布当前快照；旧仓库作为历史归档，不再推送业务代码。
@@ -69,6 +69,13 @@
 - 为 WebSocket 鉴权、上传大小/MIME、游客评论、管理员审核增加至少一条回归用例。
 - 在 GitHub Actions 中执行：锁文件安装、前端 lint/test/build、后端 typecheck/build、敏感文件扫描。
 - 测试命令缺少测试文件时不应掩盖配置错误；测试目录建立后移除仅为“无测试通过”设置的宽松行为。
+
+当前进度（2026-08-21）：
+
+- 已完成前端 Vitest 配置；
+- 已覆盖全局背景音乐状态、跨路由不重复加载、发布页未登录拦截和有效会话放行，共 5 条测试；
+- 已新增 `.github/workflows/ci.yml`，本地文件已校验，尚未在 GitHub 远程运行环境验收；
+- 后端业务单元/集成测试、上传和 WebSocket 回归测试仍未完成。
 
 验收：
 

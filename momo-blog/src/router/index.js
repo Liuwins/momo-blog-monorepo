@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { toast } from '@/utils/toast'
+import Publish from '@/views/Publish.vue'
 
 const routes = [
   {
@@ -16,7 +17,8 @@ const routes = [
   {
     path: '/publish',
     name: 'Publish',
-    component: () => import(/* webpackPrefetch: true */ '@/views/Publish.vue'),
+    // 发布是后台最核心的操作入口，直接加载避免懒加载 chunk 失效导致无法进入页面。
+    component: Publish,
     meta: { requiresAuth: true }
   },
   {

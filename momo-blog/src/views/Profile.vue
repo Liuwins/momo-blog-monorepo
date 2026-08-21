@@ -58,6 +58,7 @@
         v-if="profile.bgMusic"
         :src="profile.bgMusic"
         :auto-play="!isOwner"
+        persistent
         class="profile-music"
       />
       <van-button
@@ -203,6 +204,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { toast } from '@/utils/toast'
 import { useUserStore } from '@/stores/user'
 import { useTheme } from '@/utils/theme'
+import { useBackgroundMusicStore } from '@/stores/music'
 import { getUserInfo, getMe, getOwnerProfile, updateUserInfo, followUser, unfollowUser } from '@/api/user'
 import { getUserPosts } from '@/api/post'
 import { uploadImages, uploadAudio } from '@/api/upload'
@@ -213,6 +215,7 @@ import MusicPlayer from '@/components/MusicPlayer.vue'
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
+const backgroundMusicStore = useBackgroundMusicStore()
 const { isDark, toggleTheme } = useTheme()
 
 const defaultAvatar = 'https://api.dicebear.com/7.x/avataaars/svg?seed=default'
@@ -313,6 +316,8 @@ async function loadProfile() {
       toast.fail('加载失败')
       return
     }
+    // 个人页也是背景音乐的来源。资料没有音乐时，清理上一页遗留的背景音乐。
+    backgroundMusicStore.setTrack(profile.value.bgMusic || '', { autoPlay: !isOwner.value })
     // 同步关注状态
     isFollowing.value = !!res.isFollowing
     editForm.value = {

@@ -60,6 +60,7 @@
     </div>
 
     <audio
+      v-if="!persistent"
       ref="audioRef"
       :src="src"
       preload="metadata"
@@ -79,24 +80,90 @@
 
 <script setup>
 import { ref, computed, watch, onUnmounted } from 'vue'
+import { storeToRefs } from 'pinia'
 import { toast } from '@/utils/toast'
+import { useBackgroundMusicStore } from '@/stores/music'
 
 const props = defineProps({
   src: { type: String, default: '' },
   name: { type: String, default: '' },
-  autoPlay: { type: Boolean, default: false }
+  autoPlay: { type: Boolean, default: false },
+  // 背景音乐使用 App.vue 中的全局音频节点，动态配乐继续使用本地节点。
+  persistent: { type: Boolean, default: false }
 })
 
 const audioRef = ref(null)
 const progressRef = ref(null)
-const isPlaying = ref(false)
-const currentTime = ref(0)
-const duration = ref(0)
-const isLoading = ref(false)
-const hasError = ref(false)
-const buffered = ref(0)
-const loop = ref(true)
+const localIsPlaying = ref(false)
+const localCurrentTime = ref(0)
+const localDuration = ref(0)
+const localIsLoading = ref(false)
+const localHasError = ref(false)
+const localBuffered = ref(0)
+const localLoop = ref(true)
 const isSeeking = ref(false)
+
+const backgroundMusicStore = useBackgroundMusicStore()
+const {
+  isPlaying: backgroundIsPlaying,
+  currentTime: backgroundCurrentTime,
+  duration: backgroundDuration,
+  isLoading: backgroundIsLoading,
+  hasError: backgroundHasError,
+  buffered: backgroundBuffered,
+  loop: backgroundLoop,
+  audioElement: backgroundAudioElement
+} = storeToRefs(backgroundMusicStore)
+
+const isPlaying = computed({
+  get: () => (props.persistent ? backgroundIsPlaying.value : localIsPlaying.value),
+  set: (value) => {
+    if (props.persistent) backgroundIsPlaying.value = value
+    else localIsPlaying.value = value
+  }
+})
+const currentTime = computed({
+  get: () => (props.persistent ? backgroundCurrentTime.value : localCurrentTime.value),
+  set: (value) => {
+    if (props.persistent) backgroundCurrentTime.value = value
+    else localCurrentTime.value = value
+  }
+})
+const duration = computed({
+  get: () => (props.persistent ? backgroundDuration.value : localDuration.value),
+  set: (value) => {
+    if (props.persistent) backgroundDuration.value = value
+    else localDuration.value = value
+  }
+})
+const isLoading = computed({
+  get: () => (props.persistent ? backgroundIsLoading.value : localIsLoading.value),
+  set: (value) => {
+    if (props.persistent) backgroundIsLoading.value = value
+    else localIsLoading.value = value
+  }
+})
+const hasError = computed({
+  get: () => (props.persistent ? backgroundHasError.value : localHasError.value),
+  set: (value) => {
+    if (props.persistent) backgroundHasError.value = value
+    else localHasError.value = value
+  }
+})
+const buffered = computed({
+  get: () => (props.persistent ? backgroundBuffered.value : localBuffered.value),
+  set: (value) => {
+    if (props.persistent) backgroundBuffered.value = value
+    else localBuffered.value = value
+  }
+})
+const loop = computed({
+  get: () => (props.persistent ? backgroundLoop.value : localLoop.value),
+  set: (value) => {
+    if (props.persistent) backgroundLoop.value = value
+    else localLoop.value = value
+  }
+})
 
 const displayName = computed(() => {
   if (props.name) return props.name
@@ -120,6 +187,11 @@ const bufferedPercent = computed(() => {
 })
 
 function togglePlay() {
+  if (props.persistent) {
+    if (hasError.value) backgroundMusicStore.retry()
+    else backgroundMusicStore.toggle()
+    return
+  }
   if (!audioRef.value || hasError.value) {
     // 出错后点击重试
     if (hasError.value && audioRef.value) {
@@ -140,6 +212,10 @@ function togglePlay() {
 }
 
 function toggleLoop() {
+  if (props.persistent) {
+    backgroundMusicStore.toggleLoop()
+    return
+  }
   loop.value = !loop.value
   if (audioRef.value) {
     audioRef.value.loop = loop.value
@@ -154,6 +230,10 @@ function onLoadedMeta() {
   if (props.autoPlay) {
     audioRef.value?.play().catch(() => {})
   }
+}
+
+function getAudio() {
+  return props.persistent ? backgroundAudioElement.value : audioRef.value
 }
 
 function onCanPlay() {
@@ -195,9 +275,13 @@ function getPercentFromEvent(e) {
 
 function onSeek(e) {
   const percent = getPercentFromEvent(e)
-  if (percent === null || !audioRef.value) return
-  audioRef.value.currentTime = percent * duration.value
-  currentTime.value = audioRef.value.currentTime
+  if (percent === null || !getAudio()) return
+  if (props.persistent) {
+    backgroundMusicStore.seek(percent)
+  } else {
+    audioRef.value.currentTime = percent * duration.value
+    currentTime.value = audioRef.value.currentTime
+  }
 }
 
 function onSeekStart(e) {
@@ -219,8 +303,12 @@ function onSeekMove(e) {
 function onSeekEnd(e) {
   if (!isSeeking.value) return
   const percent = getPercentFromEvent(e)
-  if (percent !== null && audioRef.value) {
-    audioRef.value.currentTime = percent * duration.value
+  if (percent !== null && getAudio()) {
+    if (props.persistent) {
+      backgroundMusicStore.seek(percent)
+    } else {
+      audioRef.value.currentTime = percent * duration.value
+    }
   }
   isSeeking.value = false
 }
@@ -228,18 +316,24 @@ function onSeekEnd(e) {
 // src 变化时重置状态
 watch(
   () => props.src,
-  () => {
+  (src) => {
+    if (props.persistent) {
+      if (src) backgroundMusicStore.setTrack(src, { autoPlay: props.autoPlay })
+      else backgroundMusicStore.clearTrack()
+      return
+    }
     isPlaying.value = false
     currentTime.value = 0
     duration.value = 0
     buffered.value = 0
     hasError.value = false
     isLoading.value = true
-  }
+  },
+  { immediate: true }
 )
 
 onUnmounted(() => {
-  if (audioRef.value) {
+  if (!props.persistent && audioRef.value) {
     audioRef.value.pause()
   }
 })
@@ -264,7 +358,7 @@ function formatTime(sec) {
 }
 
 .music-player.playing {
-  box-shadow: 0 4px 20px rgba(7, 193, 96, 0.12);
+  box-shadow: 0 4px 20px rgba(35, 139, 91, 0.12);
 }
 
 /* ===== 主区域：唱片 + 信息 + 循环 ===== */
@@ -545,7 +639,7 @@ function formatTime(sec) {
   height: 10px;
   border-radius: 50%;
   background: var(--theme-color);
-  box-shadow: 0 1px 4px rgba(7, 193, 96, 0.4);
+  box-shadow: 0 1px 4px rgba(35, 139, 91, 0.4);
   transition: transform 0.2s ease;
 }
 

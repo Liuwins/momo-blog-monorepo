@@ -1,30 +1,37 @@
 :root {
   /* 主题色 */
-  --theme-color: #07C160;
-  --theme-color-light: #06AD56;
-  --theme-color-bg: #f0f4fa;
+  --theme-color: #238b5b;
+  --theme-color-light: #4da276;
+  --theme-color-bg: #e9f3ed;
 
   /* 文字 */
-  --text-primary: #333333;
-  --text-secondary: #666666;
-  --text-light: #999999;
-  --text-lighter: #c8c9cc;
-  --text-link: #576b95;
+  --text-primary: #26332d;
+  --text-secondary: #64736b;
+  --text-light: #98a39d;
+  --text-lighter: #c7cfca;
+  --text-link: #32735a;
   --text-on-theme: #ffffff;
 
   /* 背景 */
-  --bg-page: #f5f5f5;
+  --bg-page: #f2f4f1;
   --bg-card: #ffffff;
-  --bg-hover: #fafafa;
-  --bg-input: #f5f5f5;
-  --bg-tag: #f0f4fa;
-  --bg-tag-active: #e8f5e9;
+  --bg-hover: #f7f9f7;
+  --bg-input: #f1f5f2;
+  --bg-tag: #eef4ef;
+  --bg-tag-active: #dfeee4;
   --bg-skeleton: #f0f0f0;
   --bg-skeleton-shine: #e6e6e6;
 
   /* 边框 */
-  --border-color: #eeeeee;
-  --border-light: #f0f0f0;
+  --border-color: #e4e9e5;
+  --border-light: #edf0ed;
+
+  /* 组件基线 */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --shadow-card: 0 2px 12px rgba(38, 51, 45, 0.045);
+  --shadow-floating: 0 6px 20px rgba(38, 51, 45, 0.1);
 
   /* 热门排名色 */
   --rank-1: #ff4d4f;
@@ -34,7 +41,7 @@
   /* 尺寸 */
   --font-size-body: 15px;
   --font-size-small: 12px;
-  --spacing-card: 8px;
+  --spacing-card: 10px;
   --spacing-padding: 16px;
   --radius-img: 4px;
   --max-width: 480px;
@@ -55,28 +62,30 @@
 
 /* ========== 暗黑模式变量覆盖 ========== */
 html[data-theme='dark'] {
-  --theme-color: #1aac66;
-  --theme-color-light: #159055;
-  --theme-color-bg: #1a2e22;
+  --theme-color: #49b77d;
+  --theme-color-light: #2f8d5d;
+  --theme-color-bg: #1d3327;
 
-  --text-primary: #e8e8e8;
-  --text-secondary: #b0b0b0;
+  --text-primary: #e6eee9;
+  --text-secondary: #adbbb2;
   --text-light: #888888;
   --text-lighter: #666666;
-  --text-link: #7a9cc6;
+  --text-link: #87c7a4;
   --text-on-theme: #ffffff;
 
-  --bg-page: #121212;
+  --bg-page: #121816;
   --bg-card: #1e1e1e;
-  --bg-hover: #2a2a2a;
-  --bg-input: #2a2a2a;
-  --bg-tag: #1a2e22;
-  --bg-tag-active: #234d35;
+  --bg-hover: #202a24;
+  --bg-input: #202a24;
+  --bg-tag: #1d3327;
+  --bg-tag-active: #284d38;
   --bg-skeleton: #2a2a2a;
   --bg-skeleton-shine: #3a3a3a;
 
-  --border-color: #2e2e2e;
-  --border-light: #2a2a2a;
+  --border-color: #2c3931;
+  --border-light: #26322b;
+  --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.16);
+  --shadow-floating: 0 6px 20px rgba(0, 0, 0, 0.24);
 
   --rank-1: #ff7875;
   --rank-2: #ffa940;

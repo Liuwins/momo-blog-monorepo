@@ -6,6 +6,7 @@
           <component :is="Component" />
         </transition>
       </router-view>
+      <BackgroundMusicAudio />
       <TabBar v-if="showTabBar" />
     </div>
   </van-config-provider>
@@ -18,6 +19,7 @@ import { useUserStore } from '@/stores/user'
 import { useNotificationStore } from '@/stores/notification'
 import { useTheme } from '@/utils/theme'
 import TabBar from '@/components/TabBar.vue'
+import BackgroundMusicAudio from '@/components/BackgroundMusicAudio.vue'
 
 const route = useRoute()
 const userStore = useUserStore()
@@ -27,7 +29,6 @@ const { isDark } = useTheme()
 const showTabBar = computed(() => {
   if (!userStore.isLoggedIn) return false
   if (route.path === '/') return true
-  if (route.path === '/publish') return true
   if (route.path.startsWith('/profile')) return true
   if (route.path.startsWith('/notifications')) return true
   return false

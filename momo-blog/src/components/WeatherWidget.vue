@@ -38,12 +38,12 @@ onMounted(load)
 .weather-widget {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   font-size: 12px;
   color: var(--text-secondary);
-  background: var(--bg-hover);
-  padding: 4px 10px;
-  border-radius: 12px;
+  background: var(--bg-tag);
+  padding: 5px 9px;
+  border-radius: 8px;
   cursor: pointer;
   user-select: none;
   transition: background 0.2s;
@@ -68,7 +68,7 @@ onMounted(load)
 
 .weather-temp {
   color: var(--theme-color);
-  font-weight: 600;
+  font-weight: 650;
 }
 
 .weather-label {

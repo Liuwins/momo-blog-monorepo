@@ -13,73 +13,39 @@
       </div>
     </div>
 
-    <audio
-      ref="audioRef"
-      :src="src"
-      preload="metadata"
-      :loop="true"
-      @loadedmetadata="onLoadedMeta"
-      @timeupdate="onTimeUpdate"
-      @ended="onEnded"
-      @error="onError"
-      @waiting="isLoading = true"
-      @canplay="isLoading = false"
-      @play="isPlaying = true"
-      @pause="isPlaying = false"
-    />
   </div>
 </template>
 
 <script setup>
-import { ref, watch, onUnmounted } from 'vue'
+import { computed, watch } from 'vue'
+import { useBackgroundMusicStore } from '@/stores/music'
 
 const props = defineProps({
   src: { type: String, default: '' },
   autoPlay: { type: Boolean, default: false }
 })
 
-const audioRef = ref(null)
-const isPlaying = ref(false)
-const isLoading = ref(false)
+const musicStore = useBackgroundMusicStore()
+const isPlaying = computed(() => musicStore.isPlaying)
 
 function togglePlay() {
-  if (!audioRef.value || isLoading.value) return
-  if (isPlaying.value) {
-    audioRef.value.pause()
-  } else {
-    audioRef.value.play().catch(() => {})
-  }
-}
-
-function onLoadedMeta() {
-  isLoading.value = false
-  if (props.autoPlay) {
-    audioRef.value?.play().catch(() => {})
-  }
-}
-
-function onTimeUpdate() {}
-
-function onEnded() {
-  isPlaying.value = false
-}
-
-function onError() {
-  isPlaying.value = false
-  isLoading.value = false
+  musicStore.toggle()
 }
 
 watch(
   () => props.src,
-  () => {
-    isPlaying.value = false
-    isLoading.value = true
-  }
+  (src) => {
+    if (src) musicStore.setTrack(src, { autoPlay: props.autoPlay })
+  },
+  { immediate: true }
 )
 
-onUnmounted(() => {
-  if (audioRef.value) audioRef.value.pause()
-})
+watch(
+  () => props.autoPlay,
+  (autoPlay) => {
+    if (props.src) musicStore.setTrack(props.src, { autoPlay })
+  }
+)
 </script>
 
 <style scoped>
@@ -119,8 +85,8 @@ onUnmounted(() => {
 
 .music-disc.playing {
   box-shadow:
-    0 2px 12px rgba(7, 193, 96, 0.35),
-    inset 0 0 0 1px rgba(7, 193, 96, 0.3);
+    0 2px 12px rgba(35, 139, 91, 0.35),
+    inset 0 0 0 1px rgba(35, 139, 91, 0.3);
 }
 
 @keyframes disc-spin {
