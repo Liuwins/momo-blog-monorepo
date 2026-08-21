@@ -1,7 +1,8 @@
 import { Injectable, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { Comment, CommentStatus } from '../../entities/comment.entity';
+import { Post } from '../../entities/post.entity';
 import { PostsService } from '../posts/posts.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../../entities/notification.entity';
@@ -16,6 +17,7 @@ export class CommentsService {
     private commentsRepo: Repository<Comment>,
     private postsService: PostsService,
     private notificationsService: NotificationsService,
+    private dataSource: DataSource,
   ) {}
 
   async create(postId: number, dto: CreateCommentDto, userId?: number) {
@@ -30,19 +32,34 @@ export class CommentsService {
       ? (post.user?.nickname || dto.nickname || '匿名')
       : (dto.nickname || '匿名');
 
-    const comment = this.commentsRepo.create({
-      postId,
-      userId: userId || null,
-      nickname,
-      visitorId: dto.visitorId || '',
-      content: dto.content,
-      status: CommentStatus.PENDING,
-      replyToId: dto.replyToId,
-      replyToNickname: dto.replyToNickname,
-    });
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    const saved = await this.commentsRepo.save(comment);
-    await this.postsService.incrementCommentCount(postId);
+    let saved: Comment;
+    try {
+      const commentsRepo = queryRunner.manager.getRepository(Comment);
+      const postsRepo = queryRunner.manager.getRepository(Post);
+      const comment = commentsRepo.create({
+        postId,
+        userId: userId || null,
+        nickname,
+        visitorId: dto.visitorId || '',
+        content: dto.content,
+        status: CommentStatus.PENDING,
+        replyToId: dto.replyToId,
+        replyToNickname: dto.replyToNickname,
+      });
+
+      saved = await commentsRepo.save(comment);
+      await postsRepo.increment({ id: postId }, 'commentCount', 1);
+      await queryRunner.commitTransaction();
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
 
     // 通知博主（自己评论自己不通知）
     if (post.userId && userId !== post.userId) {
@@ -121,9 +138,35 @@ export class CommentsService {
       isPostOwner = !!post && post.userId === userId;
     }
     if (!isOwner && !isPostOwner) return false;
-    await this.commentsRepo.remove(comment);
-    await this.postsService.decrementCommentCount(comment.postId);
-    return true;
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const commentsRepo = queryRunner.manager.getRepository(Comment);
+      const postsRepo = queryRunner.manager.getRepository(Post);
+      // 事务内重新确认评论仍存在，避免并发删除时错误扣减计数。
+      const currentComment = await commentsRepo.findOne({ where: { id } });
+      if (!currentComment) {
+        await queryRunner.commitTransaction();
+        return false;
+      }
+
+      await commentsRepo.remove(currentComment);
+      await postsRepo
+        .createQueryBuilder()
+        .update(Post)
+        .set({ commentCount: () => 'MAX(commentCount - 1, 0)' })
+        .where('id = :id', { id: currentComment.postId })
+        .execute();
+      await queryRunner.commitTransaction();
+      return true;
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   /**
