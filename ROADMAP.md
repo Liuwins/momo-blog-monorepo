@@ -1,6 +1,6 @@
 # MomoBlog 当前路线图
 
-状态：2026-08-22，根据当前源码和本地验证更新；详细执行顺序见 [`docs/OPTIMIZATION-PLAN.md`](docs/OPTIMIZATION-PLAN.md)。阶段 7（NestJS 11 运行时升级）已完成本地代码与回归验证，远程 CI 和真实服务器验收不以本地结果替代。
+状态：2026-08-22，根据当前源码、本地验证和远程 CI 更新；详细执行顺序见 [`docs/OPTIMIZATION-PLAN.md`](docs/OPTIMIZATION-PLAN.md)。阶段 7（NestJS 11 运行时升级）已通过本地回归和 GitHub Actions，真实服务器验收不以本地结果替代。
 
 ## 已实现
 
@@ -24,15 +24,15 @@
 5. 阶段 4：查询性能与资源治理（本地完成）；
 6. 阶段 5：移动端体验与可访问性（本地完成）；
 7. 阶段 6：PWA、编辑历史、通知去重和媒体校验（本地完成）；
-8. 阶段 7：NestJS 11 运行时与依赖升级（本地完成，远程 CI 待验收）；
+8. 阶段 7：NestJS 11 运行时与依赖升级（本地与 CI 完成）；
 9. 阶段 8：公开发布与真实环境验收（待开始）。
 
 ## 当前高优先级缺口
 
-- 阶段 1–7 的代码、迁移、回归测试和公开快照治理已补齐；NestJS 11 升级已在隔离 Compose 中完成兼容性验证，待远程 CI 验收；
+- 阶段 1–7 的代码、迁移、回归测试和公开快照治理已补齐；NestJS 11 升级已在隔离 Compose 和 GitHub Actions 中完成兼容性验证（运行 `32506810694`）；
 - 阶段 2 已建立前后端 Vitest 基线：后端 32 条、前端 5 条测试通过，lint、typecheck 和 build 均通过；GitHub Actions 已通过前端、后端和仓库卫生三项门禁（提交 `2aadbaa`，运行 `32505266448`）；
 - 隔离端口的 Node 22 完整 Compose、migration、健康检查、Socket.IO polling、带 JWT 的 WebSocket、真实图片上传/读取、编辑历史回滚、正确的 `webmanifest` MIME 和 390×844 浏览器冒烟已通过；真实生产域名、HTTPS、目标服务器 migration 和备份恢复仍未完成现场验证。
-- NestJS 11 升级后的后端测试 32/32、typecheck、build 和生产依赖审计均通过；隔离 Compose 在 `127.0.0.1:39082/39083` 验证 backend healthy、SPA、manifest 和 Socket.IO 握手。
+- NestJS 11 升级后的后端测试 32/32、typecheck、build 和生产依赖审计均通过；隔离 Compose 在 `127.0.0.1:39082/39083` 验证 backend healthy、SPA、manifest 和 Socket.IO 握手，远程 CI 运行 `32506810694` 已通过。
 
 ### 阶段 2 本轮进度
 
@@ -61,7 +61,7 @@
 4. **媒体资源治理（本地完成）**：已增加媒体统计、孤立文件报表、备份前置和可回滚隔离清理；生产清理仍需在目标服务器按实际路径复演。
 5. **移动端与可访问性（本地完成）**：已处理键盘焦点、ARIA、触摸目标、底部安全区和 reduced-motion，并完成 390×844 本地首页/详情/登录/发布守卫冒烟；真实设备和通知/上传现场仍待复测。
 6. **可选增强（本地完成）**：已实现 PWA 安装入口、生产 Service Worker、动态编辑历史/回滚、通知去重与回复通知边界、更严格媒体文件头和图片解码校验；仍需真实浏览器/设备和目标服务器验收。
-7. **NestJS 11 运行时升级（本地完成）**：已升级 Nest 核心、Config、JWT、Passport、TypeORM、WebSockets、CLI 和 Schematics；本地测试、构建、生产审计和隔离 Compose 已通过，待远程 CI 验收。
+7. **NestJS 11 运行时升级（已完成）**：已升级 Nest 核心、Config、JWT、Passport、TypeORM、WebSockets、CLI 和 Schematics；本地测试、构建、生产审计、隔离 Compose 和 GitHub Actions（运行 `32506810694`）均已通过。
 8. **真实环境验收（待开始）**：在目标服务器验证 GitHub CI、migration、HTTPS、WebSocket、上传、备份恢复和真实域名；本地构建不替代现场验收。
 
 ## 后续技术债清单
@@ -71,7 +71,7 @@
 - 已补充 Compose healthcheck、启动顺序和迁移失败处理；
 - GitHub 远程 CI 已确认公开仓库扫描、Compose 校验和前后端门禁均通过；
 - 阶段 4 已完成动态列表批量关联查询、高频 SQLite 索引、点赞和评论记录/计数事务一致性、查询基准和媒体资源报告；真实服务器指标仍待现场测量；
-- 已通过锁文件和 override 处理前端、后端生产链依赖风险；NestJS 已升级至 11，本地生产依赖审计为 0，远程 CI 仍需复核；
+- 已通过锁文件和 override 处理前端、后端生产链依赖风险；NestJS 已升级至 11，本地和远程 CI 生产依赖审计均为 0；
 - 移动端评论输入、可访问性已完成本地优化；真实设备复测和离线体验仍列入后续评估。
 - 已补充 PWA 静态资源、编辑历史 migration、通知去重字段和媒体文件头校验；阶段 6 本地回归已通过，生产 migration、安装体验和真实媒体上传仍待现场复演。
 

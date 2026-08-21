@@ -1,6 +1,6 @@
 # MomoBlog 分阶段优化计划
 
-状态：2026-08-22，计划基于当前 Monorepo 源码和本地回归更新；阶段 1 至阶段 7 的本地代码、迁移和验证已完成，NestJS 11 的远程 CI 与真实服务器验收单独记录。
+状态：2026-08-22，计划基于当前 Monorepo 源码、本地回归和远程 CI 更新；阶段 1 至阶段 7 的代码、迁移和验证已完成，真实服务器验收单独记录。
 
 本文用于安排后续工程优化，不代表所有项目已经完成。每个阶段都应先完成代码、验证和文档，再进入下一阶段；没有通过验收标准的阶段不标记为完成。
 
@@ -140,7 +140,7 @@
 | 4 | 媒体统计、孤立文件报表和显式清理 | 代码/运维 | 默认只报告；清理前可备份、可回滚；统计不包含敏感路径和凭据 | 已完成（本地） |
 | 5 | 移动端体验与可访问性 | 前端 | 移动视口下评论、发布、通知、登录和个人页可完成；焦点、ARIA、触摸尺寸和 reduced-motion 通过检查 | 已完成（本地） |
 | 6 | PWA、编辑历史、通知去重和更严格媒体校验 | 代码/迁移 | 生产资源可加载；历史可回滚；重复通知被抑制；媒体头和解码校验通过 | 已完成（本地） |
-| 7 | NestJS 11 运行时与依赖升级 | 依赖/运行时 | 核心包、Config、JWT、Passport、TypeORM、WebSockets、CLI 和 Schematics 升级；后端 32 条测试、typecheck/build、生产审计和隔离 Compose 通过 | 已完成（本地，远程 CI 待验收） |
+| 7 | NestJS 11 运行时与依赖升级 | 依赖/运行时 | 核心包、Config、JWT、Passport、TypeORM、WebSockets、CLI 和 Schematics 升级；后端 32 条测试、typecheck/build、生产审计和隔离 Compose 通过 | 已完成（本地与 CI） |
 | 8 | 目标服务器现场验收 | 部署 | GitHub CI、迁移、HTTPS、WebSocket、上传、备份恢复和真实域名均有现场记录 | 待开始 |
 
 验收：
@@ -185,9 +185,9 @@
 - 升级 `@nestjs/common`、`core`、`platform-express`、`platform-socket.io`、`websockets`、`config`、`jwt`、`passport`、`typeorm` 至 NestJS 11 对应版本；
 - 升级 Nest CLI 与 Schematics，刷新后端 `package-lock.json`；
 - 后端 32 条测试、typecheck、build 和官方 npm 生产依赖审计均通过；
-- 使用 Node 22 生产 Compose 在隔离端口 `39082/39083` 验证容器 healthy、`/api/health`、SPA、`manifest.webmanifest` 和 Socket.IO polling 握手。
+- 使用 Node 22 生产 Compose 在隔离端口 `39082/39083` 验证容器 healthy、`/api/health`、SPA、`manifest.webmanifest` 和 Socket.IO polling 握手；GitHub Actions 运行 `32506810694` 的仓库卫生、前端和后端门禁均通过。
 
-回滚：恢复 `momo-blog-server/package.json` 与 `package-lock.json` 的上一提交即可；数据库迁移和公开 API 未发生变化。远程 CI、目标服务器启动、真实域名 HTTPS、WebSocket、上传和备份恢复仍需分别验收。
+回滚：恢复 `momo-blog-server/package.json` 与 `package-lock.json` 的上一提交即可；数据库迁移和公开 API 未发生变化。目标服务器启动、真实域名 HTTPS、WebSocket、上传和备份恢复仍需分别验收。
 
 ## 每阶段固定验证清单
 
