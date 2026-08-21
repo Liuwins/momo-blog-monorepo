@@ -24,7 +24,7 @@ MomoBlog 是一个移动端优先、朋友圈风格的个人动态博客。它�
 
 | 子项目 | 分支 | 当前提交 |
 | --- | --- | --- |
-| Monorepo 根 | `master` | 当前包含阶段 1–6 优化及容器/PWA 修复的未推送本地提交，公开推送仍待最终审查 |
+| Monorepo 根 | `master` | 当前包含阶段 1–7 优化；NestJS 11 升级已通过本地回归和隔离 Compose，远程 CI 待验收 |
 | 前端导入基线 | `legacy/frontend-master-20260821` | `425f812`（2026-08-12） |
 | 后端导入基线 | `legacy/server-master-20260821` | `d60173c`（2026-08-12） |
 
@@ -55,7 +55,7 @@ NestJS :3001（代码默认值）
 | 前端 | Vue 3、Vite 8、Vue Router 4、Pinia 3 | 单页应用，路由懒加载 |
 | UI | Vant 4 | 移动端组件、上拉加载、下拉刷新、弹窗等 |
 | 网络 | Axios、Socket.IO Client | REST 请求与通知长连接 |
-| 后端 | NestJS 10、TypeORM 0.3 | REST API、校验、鉴权、模块化业务 |
+| 后端 | NestJS 11、TypeORM 0.3 | REST API、校验、鉴权、模块化业务 |
 | 数据 | SQLite / better-sqlite3 | 单文件数据库，适合单实例部署 |
 | 媒体 | Multer、Sharp | 上传校验、图片转 WebP、多尺寸输出 |
 | 运维 | Nginx、Docker Compose、PM2/systemd | 提供容器化和非容器化两种路径 |
@@ -353,7 +353,7 @@ Compose 的 backend 已配置 `/api/health` 健康检查，并要求 frontend �
 | 已处理 | 前端/后端旧 `ROADMAP.md` 曾写“通知中心 UI 未接”，但当前已有 `Notifications.vue`、通知 Pinia Store 和 Socket.IO 连接代码 | 旧路线图会误导维护 | 已收敛到根 `ROADMAP.md`，子项目文件改为入口说明 |
 | 已处理 | `GET /api/users/:id/posts` 会查询 `p.music`，但正常创建流程不写入 `music` | 个人页与首页的动态模型可能出现字段能力不一致 | 已随动态配乐修复统一创建、更新及各查询返回，并有回归测试覆盖 |
 | 已处理 | 前端配置了 Vitest，项目中未发现测试源码；后端没有测试脚本 | 关键鉴权、上传、审核和迁移缺少回归保护 | 已补前后端测试与 CI 基线；GitHub Actions 已通过，目标服务器上传、WebSocket 和备份恢复仍需部署环境验收 |
-| 已处理 | 前后端依赖审计发现上传解析链和前端测试工具链存在高危告警 | 公开仓库安装依赖后可能暴露已知 DoS/原型污染风险 | 已移除未使用的 `mockjs`，并通过 lockfile override 修复前端和后端生产链高危依赖；Nest 10 剩余中低风险需单独评估 Nest 11 升级 |
+| 已处理 | 前后端依赖审计发现上传解析链和前端测试工具链存在高危告警，旧 Nest 依赖链存在中低风险 | 公开仓库安装依赖后可能暴露已知 DoS/原型污染风险 | 已移除未使用的 `mockjs`，通过 lockfile override 修复前端和后端生产链，并将后端升级至 NestJS 11；官方 npm 生产审计为 0 |
 | 已处理 | 动态编辑没有可审计的历史版本，误编辑只能手工重建 | 内容恢复困难，管理员无法比较或回滚 | 新增 `post_revisions` 快照、历史查询和事务化恢复接口；真实服务器 migration 与大数据量保留策略仍需复演 |
 | 已处理 | 点赞、评论和回复可能为同一事件重复创建通知，回复目标也可能跨动态伪造 | 通知中心噪声增加，可能把回复错误关联到其他动态 | 新增 `dedupeKey` 唯一去重、动态归属校验，并分别通知动态作者与原评论登录用户作者 |
 | 已处理 | 仅依赖上传 MIME 值无法识别伪造扩展名或损坏图片 | 可能保存不可播放或不符合声明类型的媒体 | 新增文件头、图片解码、像素上限和视频/音频容器签名校验；真实设备和代表性媒体仍需现场复测 |
@@ -387,8 +387,8 @@ Compose 的 backend 已配置 `/api/health` 健康检查，并要求 frontend �
 ## 14. 本次分析的验证范围
 
 - 已完成静态审阅：Monorepo 目录、依赖锁文件、配置、路由、前端 API、状态管理、控制器、服务、实体、迁移、Docker/Nginx 和运维脚本。
-- 本地自动化验证：前端测试 5/5、lint 0 error/0 warning、build 通过；后端测试 32/32、typecheck/build 通过；Compose 插值和 Bash 脚本语法通过；前端及后端生产依赖高危级别审计门禁通过（后端仍有 Nest 10 的低/中危告警，不能用 `npm audit fix --force` 处理）。
-- 本地运行验证：Node 22 前后端生产镜像、隔离端口 Compose、migration、backend `healthy`、临时账号登录、真实图片上传/读取、编辑历史回滚、带 JWT 的 WebSocket、前端首页、`application/manifest+json` manifest、Service Worker、Nginx `/api/health`、Socket.IO polling 和 CSP/权限响应头均已通过；查询基准、媒体报告和隔离恢复演练通过；390×844 浏览器首页冒烟通过，控制台错误数为 0。
+- 本地自动化验证：前端测试 5/5、lint 0 error/0 warning、build 通过；后端（NestJS 11）测试 32/32、typecheck/build 通过；Compose 插值和 Bash 脚本语法通过；前端及后端官方 npm 生产依赖审计均为 0。
+- 本地运行验证：Node 22 前后端生产镜像、NestJS 11 隔离端口 Compose（前端 `39082`、后端 `39083`）、migration、backend `healthy`、SPA、`application/manifest+json` manifest、Socket.IO polling 握手均已通过；此前查询基准、媒体报告和隔离恢复演练通过；390×844 浏览器首页冒烟通过，控制台错误数为 0。
 - 未完成：真实域名/HTTPS、目标服务器 migration、目标服务器 WebSocket/大文件上传、目标服务器备份恢复和真实 PWA 安装；GitHub 远程 CI 已通过，本地隔离环境验证不替代目标服务器现场验证。
 
 在把本文用于上线决策前，应按实际部署环境补做上述运行验证。

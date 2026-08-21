@@ -115,7 +115,7 @@ npm ci
 npm run build
 ```
 
-依赖安装必须使用仓库锁文件。发布前建议在可联网环境执行 `npm audit --omit=dev --audit-level=high --registry=https://registry.npmjs.org`（后端）和 `npm audit --audit-level=high --registry=https://registry.npmjs.org`（前端）。当前前端审计为 0；后端生产链无高危项，但 Nest 10 仍有中低风险告警，升级 Nest 11 属于独立兼容性项目，不能在部署时执行 `npm audit fix --force`。
+依赖安装必须使用仓库锁文件。发布前建议在可联网环境执行 `npm audit --omit=dev --audit-level=high --registry=https://registry.npmjs.org`（后端）和 `npm audit --audit-level=high --registry=https://registry.npmjs.org`（前端）。当前前端和后端生产依赖审计均为 0；后端已升级至 NestJS 11。不要在部署时执行 `npm audit fix --force`，依赖升级应通过可审阅的 lockfile 提交完成。
 
 Nginx 至少需要以下路由：
 
