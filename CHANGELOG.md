@@ -12,6 +12,7 @@
 - 加固公开发布与部署运维：修复 Nginx SPA MIME 映射并补 `nosniff`，备份缺失数据库/媒体目录时主动失败，修正证书续期失败处理和媒体引用归一化；新增不带凭据的线上基础冒烟脚本与环境校验测试。
 - 收紧动态与个人资料的媒体引用校验：仅允许同源路径或 `http(s)` URL，拒绝危险协议、路径穿越、控制字符和会破坏 `simple-array` 的逗号；新增前端请求/会话/发布/评论交互回归测试。
 - 当前本地回归基线为前端 21 条、后端 55 条测试，均通过；新增资源路径、评论关联 ID、游客标识、查询边界、标签规范化、生产 CSP 和匿名评论摘要校验；真实域名、HTTPS、目标服务器 migration、上传、WebSocket 和备份恢复仍需现场验收。
+- 提交 `ea17ae2` 的标签规范化回归已通过 GitHub Actions `32516365231` 的前端、后端和仓库卫生门禁；生产域名、HTTPS、目标服务器 migration、上传、WebSocket 和备份恢复仍需现场验收。
 - GitHub Actions 已通过提交 `2aadbaa` 的前端、后端和仓库卫生门禁（运行 `32505266448`），并将 actions/checkout、actions/setup-node 升级到 v5。
 - 后端 Node 22 镜像改为直接使用 better-sqlite3/sharp 预构建包，移除不必要的 Debian 编译工具下载；Nginx 补充 `webmanifest` MIME 类型；隔离端口完整 Compose、migration、健康检查、临时账号登录、图片上传/读取、编辑历史回滚、JWT WebSocket、Socket.IO polling 和 390×844 浏览器冒烟已通过。真实域名、HTTPS、目标服务器 migration 和备份恢复仍需现场验收。
 
