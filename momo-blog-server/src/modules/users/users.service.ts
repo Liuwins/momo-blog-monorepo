@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { User } from '../../entities/user.entity';
 import { FollowsService } from '../follows/follows.service';
+import { PostsService } from '../posts/posts.service';
 
 @Injectable()
 export class UsersService {
@@ -11,6 +12,7 @@ export class UsersService {
     @InjectRepository(User)
     private usersRepo: Repository<User>,
     private followsService: FollowsService,
+    private postsService: PostsService,
   ) {}
 
   async create(data: { username: string; password: string; nickname: string }) {
@@ -64,31 +66,7 @@ export class UsersService {
     };
   }
 
-  async getUserPosts(userId: number, page: number, pageSize: number) {
-    const rows: any[] = await this.usersRepo.manager.query(
-      `SELECT p.id, p.content, p.images, p.videos, p.music, p.tags, p.likeCount, p.commentCount, p.liked, p.createdAt, p.updatedAt,
-              u.id as userId, u.nickname, u.avatar
-       FROM posts p
-       LEFT JOIN users u ON p.userId = u.id
-       WHERE p.userId = ?
-       ORDER BY p.createdAt DESC
-       LIMIT ? OFFSET ?`,
-      [userId, pageSize, (page - 1) * pageSize],
-    );
-    const countResult = await this.usersRepo.manager.query(
-      'SELECT COUNT(*) as count FROM posts WHERE userId = ?',
-      [userId],
-    );
-    // simple-array 存的是逗号分隔字符串，转回数组
-    const list = rows.map((r: any) => ({
-      ...r,
-      images: r.images ? (typeof r.images === 'string' ? r.images.split(',') : r.images) : [],
-      videos: r.videos ? (typeof r.videos === 'string' ? r.videos.split(',') : r.videos) : [],
-      tags: r.tags ? (typeof r.tags === 'string' ? r.tags.split(',') : r.tags) : [],
-    }));
-    return {
-      list,
-      total: countResult[0]?.count ? parseInt(countResult[0].count) : 0,
-    };
+  async getUserPosts(userId: number, page: number, pageSize: number, currentUserId?: number) {
+    return this.postsService.findUserPosts(userId, page, pageSize, currentUserId);
   }
 }

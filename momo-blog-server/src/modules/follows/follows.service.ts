@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Follow } from '../../entities/follow.entity';
 import { Post } from '../../entities/post.entity';
+import { PostsService } from '../posts/posts.service';
 
 @Injectable()
 export class FollowsService {
@@ -10,6 +11,7 @@ export class FollowsService {
     @InjectRepository(Follow)
     private followsRepo: Repository<Follow>,
     private dataSource: DataSource,
+    private postsService: PostsService,
   ) {}
 
   // 关注：幂等（已关注不报错），禁止自关注
@@ -62,6 +64,6 @@ export class FollowsService {
       .take(pageSize);
 
     const [data, total] = await qb.getManyAndCount();
-    return { list: data, total };
+    return this.postsService.formatList(data, total, userId);
   }
 }

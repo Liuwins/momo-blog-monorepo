@@ -356,15 +356,15 @@ async function onLoad() {
     if (!res.list || res.list.length < 10) {
       finished.value = true
     }
-    // 适配 PostCard 需要的 user 嵌套结构
-    const items = (res.list || []).map((p) => ({
-      ...p,
-      user: {
-        id: p.userId,
-        nickname: p.nickname,
-        avatar: p.avatar
-      }
-    }))
+    // 兼容旧接口数据，同时保留统一动态接口返回的 user 对象
+    const items = (res.list || []).map((p) =>
+      p.user
+        ? p
+        : {
+            ...p,
+            user: { id: p.userId, nickname: p.nickname, avatar: p.avatar }
+          }
+    )
     posts.value.push(...items)
     postPage.value++
   } catch (e) {

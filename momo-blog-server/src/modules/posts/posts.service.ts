@@ -40,6 +40,22 @@ export class PostsService {
     }
 
     const [data, total] = await qb.getManyAndCount();
+    return this.formatList(data, total, currentUserId);
+  }
+
+  async findUserPosts(userId: number, page: number, pageSize: number, currentUserId?: number) {
+    const [data, total] = await this.postsRepo
+      .createQueryBuilder('post')
+      .leftJoinAndSelect('post.user', 'user')
+      .where('post.userId = :userId', { userId })
+      .orderBy('post.createdAt', 'DESC')
+      .skip((page - 1) * pageSize)
+      .take(pageSize)
+      .getManyAndCount();
+    return this.formatList(data, total, currentUserId);
+  }
+
+  async formatList(data: Post[], total: number, currentUserId?: number) {
 
     const postIds = data.map((post) => post.id);
     const [comments, likes] = postIds.length

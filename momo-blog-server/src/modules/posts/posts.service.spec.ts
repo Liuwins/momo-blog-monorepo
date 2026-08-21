@@ -6,6 +6,7 @@ describe('PostsService', () => {
     leftJoinAndSelect: vi.fn(),
     skip: vi.fn(),
     take: vi.fn(),
+    where: vi.fn(),
     andWhere: vi.fn(),
     orderBy: vi.fn(),
     getManyAndCount: vi.fn(),
@@ -127,5 +128,33 @@ describe('PostsService', () => {
     expect(commentsRepo.find).toHaveBeenCalledTimes(1);
     expect(likesRepo.find).toHaveBeenCalledTimes(1);
     expect(likesRepo.exist).not.toHaveBeenCalled();
+  });
+
+  it('个人动态复用统一序列化并保留当前用户点赞状态', async () => {
+    queryBuilder.getManyAndCount.mockResolvedValue([
+      [{
+        id: 12,
+        userId: 3,
+        content: '个人动态',
+        images: [],
+        videos: [],
+        music: '',
+        tags: [],
+        likeCount: 1,
+        commentCount: 0,
+        user: { id: 3, nickname: '博主', avatar: '' },
+      }],
+      1,
+    ]);
+    likesRepo.find.mockResolvedValue([
+      { id: 31, postId: 12, userId: 4, user: { id: 4, nickname: '访客' } },
+    ]);
+
+    const result = await service.findUserPosts(3, 1, 10, 4);
+
+    expect(queryBuilder.where).toHaveBeenCalledWith('post.userId = :userId', { userId: 3 });
+    expect(result.list[0].user).toEqual({ id: 3, nickname: '博主', avatar: '' });
+    expect(result.list[0].liked).toBe(true);
+    expect(result.list[0].likeUsers).toEqual([{ id: 4, nickname: '访客' }]);
   });
 });

@@ -45,9 +45,10 @@ export class UsersController {
   }
 
   @Get(':id/posts')
-  getUserPosts(@Param('id') id: number, @Query() query: PaginationQueryDto) {
+  @UseGuards(OptionalJwtAuthGuard)
+  getUserPosts(@Param('id') id: number, @Query() query: PaginationQueryDto, @Request() req) {
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 10;
-    return this.usersService.getUserPosts(id, page, pageSize);
+    return this.usersService.getUserPosts(id, page, pageSize, req.user?.id);
   }
 }
