@@ -2,17 +2,18 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { toast } from '@/utils/toast'
 import Publish from '@/views/Publish.vue'
+import { lazyLoad } from './lazy'
 
 const routes = [
   {
     path: '/login',
     name: 'Login',
-    component: () => import(/* webpackPrefetch: true */ '@/views/Login.vue')
+    component: lazyLoad(() => import(/* webpackPrefetch: true */ '@/views/Login.vue'))
   },
   {
     path: '/',
     name: 'Home',
-    component: () => import('@/views/Home.vue')
+    component: lazyLoad(() => import('@/views/Home.vue'))
   },
   {
     path: '/publish',
@@ -24,28 +25,28 @@ const routes = [
   {
     path: '/notifications',
     name: 'Notifications',
-    component: () => import('@/views/Notifications.vue'),
+    component: lazyLoad(() => import('@/views/Notifications.vue')),
     meta: { requiresAuth: true }
   },
   {
     path: '/post/:id',
     name: 'PostDetail',
-    component: () => import(/* webpackPrefetch: true */ '@/views/PostDetail.vue')
+    component: lazyLoad(() => import(/* webpackPrefetch: true */ '@/views/PostDetail.vue'))
   },
   {
     path: '/profile/:id?',
     name: 'Profile',
-    component: () => import(/* webpackPrefetch: true */ '@/views/Profile.vue')
+    component: lazyLoad(() => import(/* webpackPrefetch: true */ '@/views/Profile.vue'))
   },
   {
     path: '/favorites',
     name: 'Favorites',
-    component: () => import(/* webpackPrefetch: true */ '@/views/Favorites.vue')
+    component: lazyLoad(() => import(/* webpackPrefetch: true */ '@/views/Favorites.vue'))
   },
   {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
-    component: () => import('@/views/NotFound.vue')
+    component: lazyLoad(() => import('@/views/NotFound.vue'))
   }
 ]
 

@@ -75,12 +75,13 @@
 当前进度（2026-08-22）：
 
 - 已完成前端 Vitest 配置；
-- 已覆盖全局背景音乐状态、跨路由不重复加载、发布页未登录拦截和有效会话放行，共 5 条测试；
+- 已覆盖全局背景音乐状态、跨路由不重复加载、发布页未登录拦截和有效会话放行，共 7 条测试；
 - 已新增 `.github/workflows/ci.yml`，执行前端 lint/test/build、后端 test/typecheck/build、运维脚本语法检查和高危依赖审计；GitHub Actions 已在提交 `2aadbaa`（运行 `32505266448`）通过前端、后端和仓库卫生三项门禁。
 - 后端已补 Auth、Posts、Comments、Upload、WebSocket、Migration、Health、DTO、环境校验和通知去重回归测试（35 条）；本地与远程测试、类型检查和构建均已通过。
 - CI 已增加公开仓库敏感/生成文件扫描、Compose 插值校验和恢复脚本语法检查；远程结果已验收，Actions 已升级到 v5 以消除 Node 20 运行时警告。
 - 运维脚本已补齐缺失数据库/媒体目录的成对备份保护、证书续期失败处理、空媒体目录兼容和绝对 URL 引用归一化；新增不带凭据的 `scripts/production-smoke.sh`，用于目标域名现场基础检查。
 - 公开仓库环境文件治理已收紧：前端仅保留 `.env.example` 模板，CI 拒绝提交其他 `.env`、数据库、证书、密钥和截图文件。
+- 前端路由懒加载已增加一次可控失败重试，并用 2 条测试固定瞬时 chunk 失败与永久失败边界，降低跨页面导航出现“页面加载失败”的概率。
 
 验收：
 
@@ -178,7 +179,7 @@
 - 严格 CSP、Permissions-Policy、Referrer-Policy，以及 MIME、文件头、图片解码和像素上限校验；
 - Issue/PR 模板、变更日志和可重复发布入口。
 
-阶段 6 本地验证：前端 lint、5 条 Vitest、build；后端 35 条 Vitest、typecheck、build；两端高危级别审计通过；隔离端口完整 Compose 和 390×844 浏览器冒烟通过，不能替代目标服务器验收。
+阶段 6 本地验证：前端 lint、7 条 Vitest、build；后端 35 条 Vitest、typecheck、build；两端高危级别审计通过；隔离端口完整 Compose 和 390×844 浏览器冒烟通过，不能替代目标服务器验收。
 
 ## 阶段 7：NestJS 11 运行时与依赖升级
 
