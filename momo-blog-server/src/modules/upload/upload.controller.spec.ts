@@ -3,7 +3,9 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { HttpException } from '@nestjs/common';
+import { validate } from 'class-validator';
 import { UploadController } from './upload.controller';
+import { UpdateProfileDto } from '../users/dto';
 
 describe('UploadController', () => {
   let uploadDir: string;
@@ -62,12 +64,20 @@ describe('UploadController', () => {
 
     const audio = await controller.uploadAudio({
       mimetype: 'audio/mpeg',
-      originalname: '../晚间:*?\u0000散步.mp3',
+      originalname: `../晚间:*?\u0000 散步,Fleurie #1${'🚀'.repeat(40)}.mp3`,
       buffer: mp3Header,
       size: mp3Header.length,
     } as any);
     expect(audio.name).not.toMatch(/[/:*?]/);
+    expect(Array.from(audio.name)).toHaveLength(36);
     expect(audio.url).toMatch(/^\/images\/[a-f0-9]{16}\/.*\.mp3$/);
+    expect(audio.url).not.toMatch(/[,\s#]/);
+    expect(audio.url.length).toBeLessThanOrEqual(500);
+    expect(decodeURIComponent(audio.url.split('/').pop()!)).toBe(`${audio.name}.mp3`);
+
+    const profile = new UpdateProfileDto();
+    profile.bgMusic = audio.url;
+    expect(await validate(profile)).toHaveLength(0);
     expect(fs.readdirSync(uploadDir)).toHaveLength(2);
   });
 });

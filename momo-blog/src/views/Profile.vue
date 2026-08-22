@@ -482,7 +482,8 @@ async function handleEdit() {
     showEdit.value = false
     toast.success('保存成功')
   } catch (e) {
-    toast.fail('保存失败')
+    // 请求层已经展示后端的具体错误时，不再用笼统提示覆盖它。
+    if (!e?.__toasted) toast.fail(e?.message || '保存失败')
   }
 }
 

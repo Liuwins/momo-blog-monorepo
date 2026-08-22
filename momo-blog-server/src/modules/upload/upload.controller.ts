@@ -320,17 +320,21 @@ export class UploadController {
 
       // 保留原始文件名（去除扩展名后做安全过滤），让播放器能显示真实歌名
       const originalBase = path.parse(file.originalname).name || 'audio';
-      const safeName = originalBase
+      const sanitizedBase = originalBase
         .replace(/[/\\:*?"<>|]/g, '_')  // 去除危险字符
         .replace(/[\u0000-\u001F\u007F]/g, '_') // 去除控制字符，避免非法文件路径
         .replace(/\s+/g, ' ')            // 合并空白
-        .trim()
-        .substring(0, 60) || 'audio';
+        .trim();
+      // encodeURIComponent 后仍需满足媒体字段 500 字符上限；按 Unicode 字符截断，
+      // 避免从代理对中间切断 emoji 并导致编码失败。
+      const safeName = Array.from(sanitizedBase).slice(0, 36).join('') || 'audio';
       const filename = `${safeName}${ext}`;
       fs.writeFileSync(path.join(baseDir, filename), file.buffer);
 
       this.logger.log(`音频上传成功: ${filename}, 大小 ${(file.size / 1024 / 1024).toFixed(2)}MB`);
-      return { url: `/images/${name}/${filename}`, name: safeName };
+      // 文件系统保留可读歌名，对外 URL 编码路径段，避免逗号、空格等字符
+      // 被媒体地址校验拒绝或在浏览器中被误当作 URL 分隔符。
+      return { url: `/images/${name}/${encodeURIComponent(filename)}`, name: safeName };
     } catch (err) {
       this.logger.error(`音频写入磁盘失败: ${err.message}`, err.stack);
       throw new HttpException(
