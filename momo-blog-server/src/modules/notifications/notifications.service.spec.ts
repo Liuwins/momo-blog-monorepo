@@ -8,6 +8,7 @@ describe('NotificationsService', () => {
     create: vi.fn(),
     save: vi.fn(),
     count: vi.fn(),
+    update: vi.fn(),
   };
   const gateway = {
     sendNotification: vi.fn(),
@@ -21,6 +22,8 @@ describe('NotificationsService', () => {
     notificationsRepo.create.mockImplementation((value) => ({ id: 8, ...value }));
     notificationsRepo.save.mockImplementation(async (value) => ({ id: 8, ...value }));
     notificationsRepo.count.mockResolvedValue(1);
+    notificationsRepo.update.mockResolvedValue({ affected: 1 });
+    gateway.sendUnreadCount.mockResolvedValue(undefined);
     service = new NotificationsService(notificationsRepo as any, gateway as any);
   });
 
@@ -57,5 +60,17 @@ describe('NotificationsService', () => {
 
     expect(gateway.sendNotification).toHaveBeenCalledWith(1, saved);
     expect(gateway.sendUnreadCount).toHaveBeenCalledWith(1, 1);
+  });
+
+  it('只标记当前用户指定的通知，并同步最新未读数', async () => {
+    notificationsRepo.count.mockResolvedValue(2);
+
+    await expect(service.markOneAsRead(1, 8)).resolves.toBe(2);
+
+    expect(notificationsRepo.update).toHaveBeenCalledWith(
+      { id: 8, receiverId: 1, isRead: false },
+      { isRead: true },
+    );
+    expect(gateway.sendUnreadCount).toHaveBeenCalledWith(1, 2);
   });
 });

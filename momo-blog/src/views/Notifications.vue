@@ -60,7 +60,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { toast } from '@/utils/toast'
-import { getNotifications, markAllRead } from '@/api/notification'
+import { getNotifications, markAllRead, markNotificationRead } from '@/api/notification'
 import { useNotificationStore } from '@/stores/notification'
 import { formatRelativeTime } from '@/utils/time'
 
@@ -136,10 +136,20 @@ async function handleMarkAllRead() {
   }
 }
 
-function handleClick(item) {
+async function handleClick(item) {
   if (!item.isRead) {
+    // 先更新界面，避免点击后红点停留；失败时恢复状态，避免本地状态与服务端不一致。
     item.isRead = true
     notificationStore.unreadCount = Math.max(0, notificationStore.unreadCount - 1)
+    try {
+      const result = await markNotificationRead(item.id)
+      if (typeof result?.count === 'number') notificationStore.unreadCount = result.count
+    } catch {
+      item.isRead = false
+      notificationStore.unreadCount += 1
+      toast.fail('标记已读失败，请重试')
+      return
+    }
   }
   if (item.postId) {
     router.push(`/post/${item.postId}`)

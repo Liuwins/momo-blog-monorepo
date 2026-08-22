@@ -11,3 +11,7 @@ export function getUnreadCount() {
 export function markAllRead() {
   return request.post('/notifications/read-all')
 }
+
+export function markNotificationRead(id) {
+  return request.post(`/notifications/${id}/read`)
+}

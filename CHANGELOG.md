@@ -17,6 +17,7 @@
 - 后端 Node 22 镜像改为直接使用 better-sqlite3/sharp 预构建包，移除不必要的 Debian 编译工具下载；Nginx 补充 `webmanifest` MIME 类型；隔离端口完整 Compose、migration、健康检查、临时账号登录、图片上传/读取、编辑历史回滚、JWT WebSocket、Socket.IO polling 和 390×844 浏览器冒烟已通过。真实域名、HTTPS、目标服务器 migration 和备份恢复仍需现场验收。
 - 首页与个人主页新增封面视频：管理员可上传 MP4/WebM（≤50 MB），视频静音、循环、移动端兼容，加载失败时回退到图片或主题背景；用户资料新增 `bgVideo` migration、DTO 校验和迁移回归测试。
 - 媒体统计与隔离清理同步纳入 `users.bgVideo` 引用，避免封面视频被误报为孤立文件；真实服务器上传、代理上限和真实设备解码仍未验收。
+- 修复通知页点击单条未读通知后红点复现的问题：新增按通知 ID 标记已读接口，服务端未读数与前端状态同步，请求失败时恢复未读状态。
 
 ## 发布约定
 

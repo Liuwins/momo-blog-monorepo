@@ -89,6 +89,17 @@ export class NotificationsService {
     );
   }
 
+  /** 仅将当前用户指定的一条通知标记为已读，返回最新未读数。 */
+  async markOneAsRead(userId: number, notificationId: number) {
+    await this.notificationsRepo.update(
+      { id: notificationId, receiverId: userId, isRead: false },
+      { isRead: true },
+    );
+    const count = await this.getUnreadCount(userId);
+    await this.gateway.sendUnreadCount(userId, count);
+    return count;
+  }
+
   async getUnreadCount(userId: number) {
     return this.notificationsRepo.count({
       where: { receiverId: userId, isRead: false },

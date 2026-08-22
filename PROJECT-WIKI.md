@@ -210,6 +210,7 @@ momo-blog/src/
 | `GET` | `/api/notifications` | JWT | 通知分页 |
 | `GET` | `/api/notifications/unread-count` | JWT | 未读数 |
 | `POST` | `/api/notifications/read-all` | JWT | 全部标为已读 |
+| `POST` | `/api/notifications/:id/read` | JWT | 将当前用户指定的一条通知标为已读并返回最新未读数 |
 
 ### 上传、分享与健康检查
 
