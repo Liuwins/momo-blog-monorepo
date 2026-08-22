@@ -1,12 +1,30 @@
 <template>
-  <!-- 加载中或失败均静默隐藏，避免打扰用户 -->
-  <div v-if="weather" class="weather-widget" @click="refresh">
-    <span class="weather-icon">{{ weather.icon }}</span>
-    <span class="weather-city">{{ weather.city }}</span>
-    <span class="weather-sep">·</span>
-    <span class="weather-temp">{{ weather.temperature }}°</span>
-    <span class="weather-label">{{ weather.label }}</span>
-  </div>
+  <button
+    class="weather-widget"
+    type="button"
+    :aria-label="weather ? `刷新${weather.city}天气` : error ? '天气暂不可用，点击重试' : '正在获取天气'"
+    @click="refresh"
+  >
+    <template v-if="weather">
+      <span class="weather-icon">{{ weather.icon }}</span>
+      <span class="weather-city">{{ weather.city }}</span>
+      <span class="weather-sep">·</span>
+      <span class="weather-temp">{{ weather.temperature }}°</span>
+      <span class="weather-label">{{ weather.label }}</span>
+    </template>
+    <template v-else-if="loading">
+      <span class="weather-icon weather-loading-icon" aria-hidden="true">◌</span>
+      <span class="weather-label">正在获取天气</span>
+    </template>
+    <template v-else-if="error">
+      <span class="weather-icon" aria-hidden="true">⌁</span>
+      <span class="weather-label">天气暂不可用 · 重试</span>
+    </template>
+    <template v-else>
+      <span class="weather-icon" aria-hidden="true">⌁</span>
+      <span class="weather-label">定位天气</span>
+    </template>
+  </button>
 </template>
 
 <script setup>
@@ -14,10 +32,22 @@ import { ref, onMounted } from 'vue'
 import { getLocationWeather } from '@/utils/weather'
 
 const weather = ref(null)
+const loading = ref(false)
+const error = ref(false)
 
 async function load() {
-  // 静默失败：任何环节出错都返回 null，组件不显示
-  weather.value = await getLocationWeather()
+  if (loading.value) return
+  loading.value = true
+  error.value = false
+  try {
+    weather.value = await getLocationWeather()
+    if (!weather.value) error.value = true
+  } catch {
+    weather.value = null
+    error.value = true
+  } finally {
+    loading.value = false
+  }
 }
 
 function refresh() {
@@ -47,6 +77,8 @@ onMounted(load)
   cursor: pointer;
   user-select: none;
   transition: background 0.2s;
+  border: 0;
+  font: inherit;
 }
 
 .weather-widget:active {
@@ -73,5 +105,14 @@ onMounted(load)
 
 .weather-label {
   color: var(--text-light);
+  white-space: nowrap;
+}
+
+.weather-loading-icon {
+  animation: weather-spin 1.1s linear infinite;
+}
+
+@keyframes weather-spin {
+  to { transform: rotate(360deg); }
 }
 </style>

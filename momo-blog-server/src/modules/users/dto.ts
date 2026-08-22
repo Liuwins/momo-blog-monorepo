@@ -28,5 +28,11 @@ export class UpdateProfileDto {
   @IsString()
   @MaxLength(500)
   @Validate(SafeMediaReferenceConstraint, [{ allowEmpty: true }])
+  bgVideo?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  @Validate(SafeMediaReferenceConstraint, [{ allowEmpty: true }])
   bgMusic?: string;
 }

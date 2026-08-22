@@ -11,7 +11,10 @@ export const useNotificationStore = defineStore('notification', () => {
   function connect() {
     const userStore = useUserStore()
     if (!userStore.isLoggedIn) return
-    if (socket) return
+    if (socket) {
+      if (socket.disconnected) socket.connect()
+      return
+    }
 
     const token = userStore.token
     if (!token) return
@@ -67,6 +70,23 @@ export const useNotificationStore = defineStore('notification', () => {
     } catch {
       /* ignore */
     }
+  }
+
+  // 手机切回前台或网络恢复后，主动补一次未读数并唤醒断开的连接。
+  // 这样从发布页/编辑页返回通知页时，不依赖 Socket.IO 恰好没有断线。
+  function syncWhenVisible() {
+    if (typeof document === 'undefined' || document.visibilityState !== 'visible') return
+    const userStore = useUserStore()
+    if (!userStore.isLoggedIn) return
+    connect()
+    fetchUnreadCount()
+  }
+
+  if (typeof document !== 'undefined') {
+    document.addEventListener('visibilitychange', syncWhenVisible)
+  }
+  if (typeof window !== 'undefined') {
+    window.addEventListener('online', syncWhenVisible)
   }
 
   return { unreadCount, connect, disconnect, fetchUnreadCount }

@@ -9,6 +9,24 @@
       :style="coverStyle"
       @click="handleCoverClick"
     >
+      <video
+        v-if="bgVideoSrc && !coverVideoError"
+        class="moments-cover-video"
+        :src="bgVideoSrc"
+        autoplay
+        muted
+        loop
+        playsinline
+        webkit-playsinline
+        preload="metadata"
+        aria-label="首页封面视频"
+        @error="coverVideoError = true"
+      />
+      <div class="cover-media-overlay" aria-hidden="true"></div>
+      <div v-if="!bgImageSrc && (!bgVideoSrc || coverVideoError)" class="cover-fallback">
+        <span class="cover-fallback-title">记录生活，分享美好</span>
+        <span class="cover-fallback-subtitle">MomoBlog</span>
+      </div>
       <!-- 封面操作提示仅管理员可见，访客无封面编辑权限，不展示入口 -->
       <div v-if="userStore.isLoggedIn" class="cover-hint">
         <van-icon name="photograph" size="13" />
@@ -234,7 +252,7 @@ import {
   rejectComment
 } from '@/api/post'
 import { getFollowingPosts, getMe, updateUserInfo, getOwnerProfile } from '@/api/user'
-import { uploadImages } from '@/api/upload'
+import { uploadImages, uploadVideo } from '@/api/upload'
 import { compressImage } from '@/utils/compress'
 import { getVisitorId, getVisitorNickname, setVisitorNickname } from '@/utils/visitor'
 import { formatRelativeTime } from '@/utils/time'
@@ -289,8 +307,12 @@ const defaultAvatar = 'https://api.dicebear.com/7.x/avataaars/svg?seed=visitor'
 // 访客未登录时，从后端获取博主公开资料（封面/头像/昵称），登录后优先用 userInfo
 const ownerProfile = ref(null)
 
+const bgImageSrc = computed(() => userStore.userInfo?.bgImage || ownerProfile.value?.bgImage || '')
+const bgVideoSrc = computed(() => userStore.userInfo?.bgVideo || ownerProfile.value?.bgVideo || '')
+const coverVideoError = ref(false)
+
 const coverStyle = computed(() => {
-  const bg = userStore.userInfo?.bgImage || ownerProfile.value?.bgImage
+  const bg = bgImageSrc.value
   return bg
     ? { backgroundImage: `linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.35)), url(${bg})` }
     : {}
@@ -306,6 +328,10 @@ const coverAvatar = computed(() =>
 // 背景音乐：管理员用 userInfo，游客用 ownerProfile；游客自动播放
 const bgMusicSrc = computed(() => userStore.userInfo?.bgMusic || ownerProfile.value?.bgMusic || '')
 const bgMusicAutoPlay = computed(() => !userStore.isLoggedIn)
+
+watch(bgVideoSrc, () => {
+  coverVideoError.value = false
+})
 
 // 首页资料加载完成后同步背景音乐；同一首歌不重新加载，路由回来时保持进度。
 watch(
@@ -331,29 +357,55 @@ function goProfile() {
   }
 }
 
-// 点击封面：管理员更换封面，访客无操作（不展示入口也不打扰）
+// 点击封面：管理员可在图片和视频封面之间切换，访客无操作
 async function handleCoverClick() {
   if (!userStore.isLoggedIn) return
   const input = document.createElement('input')
   input.type = 'file'
-  input.accept = 'image/*'
+  input.accept = 'image/*,video/mp4,video/webm'
   input.onchange = async (e) => {
     const file = e.target.files && e.target.files[0]
     if (!file) return
-    if (file.size > 5 * 1024 * 1024) {
-      toast.fail('图片不能超过5MB')
-      return
-    }
     try {
-      const compressed = await compressImage(file, 1280, 5 * 1024 * 1024)
-      const res = await uploadImages([compressed])
-      if (res.urls && res.urls.length > 0) {
-        const bgImage = res.urls[0]
-        await updateUserInfo({ bgImage })
-        userStore.setUserInfo({ ...userStore.userInfo, bgImage })
-        toast.success('封面已更新')
+      if (file.type.startsWith('video/')) {
+        if (!['video/mp4', 'video/webm'].includes(file.type)) {
+          toast.fail('仅支持 mp4 / webm 封面视频')
+          return
+        }
+        if (file.size > 50 * 1024 * 1024) {
+          toast.fail('封面视频不能超过50MB')
+          return
+        }
+        const res = await uploadVideo(file)
+        if (res.url) {
+          const bgVideo = res.url
+          await updateUserInfo({ bgVideo })
+          userStore.setUserInfo({ ...userStore.userInfo, bgVideo })
+          coverVideoError.value = false
+          toast.success('视频封面已更新')
+        } else {
+          toast.fail('上传失败')
+        }
       } else {
-        toast.fail('上传失败')
+        if (!file.type.startsWith('image/')) {
+          toast.fail('请选择图片或 mp4 / webm 视频')
+          return
+        }
+        if (file.size > 5 * 1024 * 1024) {
+          toast.fail('图片不能超过5MB')
+          return
+        }
+        const compressed = await compressImage(file, 1280, 5 * 1024 * 1024)
+        const res = await uploadImages([compressed])
+        if (res.urls && res.urls.length > 0) {
+          const bgImage = res.urls[0]
+          await updateUserInfo({ bgImage, bgVideo: '' })
+          userStore.setUserInfo({ ...userStore.userInfo, bgImage, bgVideo: '' })
+          coverVideoError.value = false
+          toast.success('图片封面已更新')
+        } else {
+          toast.fail('上传失败')
+        }
       }
     } catch (err) {
       toast.fail('上传失败')
@@ -648,6 +700,55 @@ async function handleRejectComment(comment) {
   background-repeat: no-repeat;
   /* 为右下角重叠的头像预留空间 */
   margin-bottom: 34px;
+  overflow: hidden;
+}
+
+.moments-cover-video,
+.cover-media-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.moments-cover-video {
+  z-index: 0;
+  object-fit: cover;
+  pointer-events: none;
+  background: #2e8f61;
+}
+
+.cover-media-overlay {
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(17, 31, 24, 0.08), rgba(17, 31, 24, 0.4));
+}
+
+.cover-fallback {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  color: rgba(255, 255, 255, 0.92);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.24);
+  pointer-events: none;
+}
+
+.cover-fallback-title {
+  font-size: 20px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+}
+
+.cover-fallback-subtitle {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  opacity: 0.72;
+  text-transform: uppercase;
 }
 
 .moments-cover.is-owner {
@@ -668,6 +769,7 @@ async function handleRejectComment(comment) {
   font-size: 11px;
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
+  z-index: 3;
 }
 
 .cover-user {
@@ -677,6 +779,7 @@ async function handleRejectComment(comment) {
   display: flex;
   align-items: flex-start;
   gap: 12px;
+  z-index: 3;
 }
 
 .cover-nickname {
@@ -1035,6 +1138,43 @@ async function handleRejectComment(comment) {
   border-top: 1px solid var(--border-light);
   padding: 8px 12px max(8px, env(safe-area-inset-bottom, 0px));
   scroll-margin-bottom: 12px;
+}
+
+@media (max-width: 480px) {
+  .moments-cover {
+    height: 188px;
+  }
+
+  .cover-user {
+    right: 12px;
+    gap: 9px;
+  }
+
+  .cover-nickname {
+    font-size: 16px;
+  }
+
+  .cover-fallback-title {
+    font-size: 18px;
+  }
+
+  .home-toolbar {
+    padding-right: 12px;
+    padding-left: 12px;
+  }
+
+  .toolbar-top {
+    grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+    gap: 6px;
+  }
+
+  .feed-tabs {
+    grid-column: 1 / -1;
+    justify-self: start;
+    border-top: 1px solid var(--border-light);
+    width: 100%;
+    padding-top: 4px;
+  }
 }
 
 .nickname-input {

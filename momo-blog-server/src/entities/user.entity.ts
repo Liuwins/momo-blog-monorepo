@@ -34,6 +34,9 @@ export class User {
   bgImage: string;
 
   @Column({ default: '' })
+  bgVideo: string;
+
+  @Column({ default: '' })
   bgMusic: string;
 
   @CreateDateColumn()

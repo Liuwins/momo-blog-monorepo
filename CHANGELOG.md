@@ -15,6 +15,8 @@
 - 提交 `ea17ae2` 的标签规范化回归已通过 GitHub Actions `32516365231` 的前端、后端和仓库卫生门禁；生产域名、HTTPS、目标服务器 migration、上传、WebSocket 和备份恢复仍需现场验收。
 - GitHub Actions 已通过提交 `2aadbaa` 的前端、后端和仓库卫生门禁（运行 `32505266448`），并将 actions/checkout、actions/setup-node 升级到 v5。
 - 后端 Node 22 镜像改为直接使用 better-sqlite3/sharp 预构建包，移除不必要的 Debian 编译工具下载；Nginx 补充 `webmanifest` MIME 类型；隔离端口完整 Compose、migration、健康检查、临时账号登录、图片上传/读取、编辑历史回滚、JWT WebSocket、Socket.IO polling 和 390×844 浏览器冒烟已通过。真实域名、HTTPS、目标服务器 migration 和备份恢复仍需现场验收。
+- 首页与个人主页新增封面视频：管理员可上传 MP4/WebM（≤50 MB），视频静音、循环、移动端兼容，加载失败时回退到图片或主题背景；用户资料新增 `bgVideo` migration、DTO 校验和迁移回归测试。
+- 媒体统计与隔离清理同步纳入 `users.bgVideo` 引用，避免封面视频被误报为孤立文件；真实服务器上传、代理上限和真实设备解码仍未验收。
 
 ## 发布约定
 

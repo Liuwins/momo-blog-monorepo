@@ -9,6 +9,20 @@
         :style="profile.bgImage ? { backgroundImage: 'linear-gradient(rgba(0,0,0,0.25), rgba(0,0,0,0.4)), url(' + profile.bgImage + ')' } : {}"
         @click="handleBgUpload"
       >
+        <video
+          v-if="profile.bgVideo && !profileVideoError"
+          class="profile-bg-video"
+          :src="profile.bgVideo"
+          autoplay
+          muted
+          loop
+          playsinline
+          webkit-playsinline
+          preload="metadata"
+          aria-label="个人主页封面视频"
+          @error="profileVideoError = true"
+        />
+        <div class="profile-bg-overlay" aria-hidden="true"></div>
         <div v-if="isOwner" class="bg-upload-hint">
           <van-icon name="photograph" color="#fff" size="20" />
           <span>更换封面</span>
@@ -155,6 +169,37 @@
               placeholder="请输入个性签名"
               maxlength="50"
             />
+            <van-field label="封面视频">
+              <template #input>
+                <div class="music-edit-row">
+                  <input
+                    v-model="editForm.bgVideo"
+                    placeholder="粘贴视频URL或上传"
+                    class="music-url-input"
+                  />
+                  <van-uploader
+                    :before-read="handleBgVideoUpload"
+                    accept="video/mp4,video/webm"
+                    :max-count="1"
+                    :show-upload="true"
+                    :preview-image="false"
+                    :deletable="false"
+                  >
+                    <van-button size="small" plain type="primary" color="#07C160">
+                      上传
+                    </van-button>
+                  </van-uploader>
+                  <van-icon
+                    v-if="editForm.bgVideo"
+                    name="cross"
+                    size="16"
+                    color="#999"
+                    class="music-clear-icon"
+                    @click="editForm.bgVideo = ''"
+                  />
+                </div>
+              </template>
+            </van-field>
             <van-field label="背景音乐">
               <template #input>
                 <div class="music-edit-row">
@@ -207,7 +252,7 @@ import { useTheme } from '@/utils/theme'
 import { useBackgroundMusicStore } from '@/stores/music'
 import { getUserInfo, getMe, getOwnerProfile, updateUserInfo, followUser, unfollowUser } from '@/api/user'
 import { getUserPosts } from '@/api/post'
-import { uploadImages, uploadAudio } from '@/api/upload'
+import { uploadImages, uploadVideo, uploadAudio } from '@/api/upload'
 import { compressImage } from '@/utils/compress'
 import BackToTop from '@/components/BackToTop.vue'
 import MusicPlayer from '@/components/MusicPlayer.vue'
@@ -226,6 +271,7 @@ const profile = ref({
   avatar: '',
   signature: '',
   bgImage: '',
+  bgVideo: '',
   bgMusic: '',
   postCount: 0,
   followerCount: 0,
@@ -244,8 +290,9 @@ let loadVersion = 0
 let profileReady = false
 
 const showEdit = ref(false)
-const editForm = ref({ nickname: '', signature: '', avatar: '', bgImage: '', bgMusic: '' })
+const editForm = ref({ nickname: '', signature: '', avatar: '', bgImage: '', bgVideo: '', bgMusic: '' })
 const avatarFile = ref([])
+const profileVideoError = ref(false)
 // 关注状态
 const isFollowing = ref(false)
 const followLoading = ref(false)
@@ -325,8 +372,10 @@ async function loadProfile() {
       signature: profile.value.signature,
       avatar: profile.value.avatar || '',
       bgImage: profile.value.bgImage || '',
+      bgVideo: profile.value.bgVideo || '',
       bgMusic: profile.value.bgMusic || ''
     }
+    profileVideoError.value = false
     // profile 就绪，允许 onLoad 加载文章列表
     profileReady = true
     // 手动触发首屏加载（van-list 挂载时 profile.id 还是 0 被跳过）
@@ -417,6 +466,7 @@ async function handleEdit() {
       payload.avatar = editForm.value.avatar.trim()
     }
     payload.bgImage = (editForm.value.bgImage || '').trim()
+    payload.bgVideo = (editForm.value.bgVideo || '').trim()
     payload.bgMusic = (editForm.value.bgMusic || '').trim()
     await updateUserInfo(payload)
     profile.value.nickname = editForm.value.nickname
@@ -425,7 +475,9 @@ async function handleEdit() {
       profile.value.avatar = editForm.value.avatar.trim()
     }
     profile.value.bgImage = payload.bgImage
+    profile.value.bgVideo = payload.bgVideo
     profile.value.bgMusic = payload.bgMusic
+    profileVideoError.value = false
     userStore.setUserInfo({ ...userStore.userInfo, ...payload })
     showEdit.value = false
     toast.success('保存成功')
@@ -434,36 +486,89 @@ async function handleEdit() {
   }
 }
 
-// 点击背景图区域上传新背景图（仅本人）
+// 点击背景区域上传图片或视频封面（仅本人）
 async function handleBgUpload() {
   if (!isOwner.value) return
   const input = document.createElement('input')
   input.type = 'file'
-  input.accept = 'image/*'
+  input.accept = 'image/*,video/mp4,video/webm'
   input.onchange = async (e) => {
     const file = e.target.files && e.target.files[0]
     if (!file) return
-    if (file.size > 5 * 1024 * 1024) {
-      toast.fail('图片不能超过5MB')
-      return
-    }
     try {
-      const compressed = await compressImage(file, 1280, 5 * 1024 * 1024)
-      const res = await uploadImages([compressed])
-      if (res.urls && res.urls.length > 0) {
-        const bgImage = res.urls[0]
-        await updateUserInfo({ bgImage })
-        profile.value.bgImage = bgImage
-        editForm.value.bgImage = bgImage
-        toast.success('背景图已更新')
+      if (file.type.startsWith('video/')) {
+        if (!['video/mp4', 'video/webm'].includes(file.type)) {
+          toast.fail('仅支持 mp4 / webm 封面视频')
+          return
+        }
+        if (file.size > 50 * 1024 * 1024) {
+          toast.fail('封面视频不能超过50MB')
+          return
+        }
+        const res = await uploadVideo(file)
+        if (res.url) {
+          await updateUserInfo({ bgVideo: res.url })
+          profile.value.bgVideo = res.url
+          editForm.value.bgVideo = res.url
+          profileVideoError.value = false
+          toast.success('视频封面已更新')
+        } else {
+          toast.fail('上传失败')
+        }
       } else {
-        toast.fail('上传失败')
+        if (!file.type.startsWith('image/')) {
+          toast.fail('请选择图片或 mp4 / webm 视频')
+          return
+        }
+        if (file.size > 5 * 1024 * 1024) {
+          toast.fail('图片不能超过5MB')
+          return
+        }
+        const compressed = await compressImage(file, 1280, 5 * 1024 * 1024)
+        const res = await uploadImages([compressed])
+        if (res.urls && res.urls.length > 0) {
+          const bgImage = res.urls[0]
+          await updateUserInfo({ bgImage, bgVideo: '' })
+          profile.value.bgImage = bgImage
+          profile.value.bgVideo = ''
+          editForm.value.bgImage = bgImage
+          editForm.value.bgVideo = ''
+          profileVideoError.value = false
+          toast.success('背景图已更新')
+        } else {
+          toast.fail('上传失败')
+        }
       }
     } catch (e) {
       toast.fail('上传失败')
     }
   }
   input.click()
+}
+
+// 编辑弹窗中上传封面视频
+async function handleBgVideoUpload(file) {
+  if (!file) return false
+  if (!['video/mp4', 'video/webm'].includes(file.type)) {
+    toast.fail('仅支持 mp4 / webm 封面视频')
+    return false
+  }
+  if (file.size > 50 * 1024 * 1024) {
+    toast.fail('封面视频不能超过50MB')
+    return false
+  }
+  try {
+    const res = await uploadVideo(file)
+    if (res.url) {
+      editForm.value.bgVideo = res.url
+      toast.success('视频封面已上传')
+    } else {
+      toast.fail('视频上传失败：服务器未返回文件地址')
+    }
+  } catch (e) {
+    if (!e?.__toasted) toast.fail(e?.message || '视频上传失败，请稍后重试')
+  }
+  return false
 }
 
 // 编辑弹窗中上传音频文件
@@ -546,6 +651,26 @@ async function handleToggleFollow() {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  overflow: hidden;
+}
+
+.profile-bg-video,
+.profile-bg-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.profile-bg-video {
+  object-fit: cover;
+  pointer-events: none;
+  background: #2e8f61;
+}
+
+.profile-bg-overlay {
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(17, 31, 24, 0.08), rgba(17, 31, 24, 0.4));
 }
 
 .profile-bg.is-owner {
@@ -565,6 +690,7 @@ async function handleToggleFollow() {
   color: #fff;
   font-size: 12px;
   backdrop-filter: blur(4px);
+  z-index: 2;
 }
 
 .profile-music {

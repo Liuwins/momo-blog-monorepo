@@ -9,9 +9,9 @@
       @click-right="handlePublish"
     >
       <template #right>
-        <span :class="['publish-btn', { disabled: !canPublish }]">{{
-          isEdit ? '保存' : '发布'
-        }}</span>
+        <span :class="['publish-btn', { disabled: !canPublish || uploading }]">
+          {{ uploading ? '提交中…' : isEdit ? '保存' : '发布' }}
+        </span>
       </template>
     </van-nav-bar>
 
@@ -259,7 +259,13 @@ onMounted(async () => {
   // 非编辑模式：检测是否有未提交草稿，提示恢复
   if (!isEdit.value) {
     const draft = getDraft()
-    if (draft && (draft.content || (draft.images && draft.images.length))) {
+    if (
+      draft &&
+      (draft.content ||
+        (draft.images && draft.images.length) ||
+        (draft.videos && draft.videos.length) ||
+        draft.music)
+    ) {
       try {
         await showConfirmDialog({
           title: '恢复草稿',
@@ -324,7 +330,7 @@ onUnmounted(() => {
 
 // 草稿自动保存：内容变化时防抖 1 秒存入本地（仅新建模式，编辑模式不打扰）
 watch(
-  [content, fileList, videoList, selectedTags],
+  [content, fileList, videoList, selectedTags, musicUrl],
   () => {
     if (isEdit.value) return
     if (draftTimer) clearTimeout(draftTimer)

@@ -6,6 +6,7 @@ import { AddMusicAndBgImage1786418900000 } from './migrations/1786418900000-AddM
 import { AddQueryPerformanceIndexes1786500000000 } from './migrations/1786500000000-AddQueryPerformanceIndexes';
 import { AddPostRevisions1786600000000 } from './migrations/1786600000000-AddPostRevisions';
 import { AddNotificationDedupeKey1786601000000 } from './migrations/1786601000000-AddNotificationDedupeKey';
+import { AddUserBgVideo1786602000000 } from './migrations/1786602000000-AddUserBgVideo';
 
 describe('SQLite migrations', () => {
   let dataSource: DataSource | undefined;
@@ -27,6 +28,7 @@ describe('SQLite migrations', () => {
         AddQueryPerformanceIndexes1786500000000,
         AddPostRevisions1786600000000,
         AddNotificationDedupeKey1786601000000,
+        AddUserBgVideo1786602000000,
       ],
     });
     await dataSource.initialize();
@@ -46,6 +48,7 @@ describe('SQLite migrations', () => {
     expect(postColumns.some((column: { name: string }) => column.name === 'music')).toBe(true);
     expect(userColumns.some((column: { name: string }) => column.name === 'bgImage')).toBe(true);
     expect(userColumns.some((column: { name: string }) => column.name === 'bgMusic')).toBe(true);
+    expect(userColumns.some((column: { name: string }) => column.name === 'bgVideo')).toBe(true);
     const revisionTables = await dataSource.query(
       `SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'post_revisions'`,
     );

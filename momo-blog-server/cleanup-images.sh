@@ -44,7 +44,7 @@ mkdir -p "$(dirname "$LOG")"
 
 echo "$(date '+%Y-%m-%d %H:%M:%S') 开始清理..." >> "$LOG"
 
-# 收集所有媒体引用（动态图片/视频/配乐、头像、封面和背景音乐）。
+# 收集所有媒体引用（动态图片/视频/配乐、头像、图片封面、视频封面和背景音乐）。
 # simple-array 字段以逗号保存，统一拆分后再与 images 根目录下的随机目录比较。
 REFERENCES=$(sqlite3 "$DB" "
   SELECT images FROM posts WHERE images != ''
@@ -52,6 +52,7 @@ REFERENCES=$(sqlite3 "$DB" "
   UNION ALL SELECT music FROM posts WHERE music != ''
   UNION ALL SELECT avatar FROM users WHERE avatar != ''
   UNION ALL SELECT bgImage FROM users WHERE bgImage != ''
+  UNION ALL SELECT bgVideo FROM users WHERE bgVideo != ''
   UNION ALL SELECT bgMusic FROM users WHERE bgMusic != '';
 " | tr ',' '\n' \
   | sed -E 's#^[^:]+://[^/]+/images/##; s#^/images/##; s/[?#].*$//' \

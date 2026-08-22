@@ -38,7 +38,7 @@ function collectReferences(db) {
   const references = new Set();
   const rows = [
     ...db.prepare('SELECT images, videos, music FROM posts').all(),
-    ...db.prepare('SELECT avatar, bgImage, bgMusic FROM users').all(),
+    ...db.prepare('SELECT avatar, bgImage, bgVideo, bgMusic FROM users').all(),
   ];
   for (const row of rows) {
     for (const value of Object.values(row)) {

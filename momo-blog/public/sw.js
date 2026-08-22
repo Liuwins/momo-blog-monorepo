@@ -1,4 +1,5 @@
-const CACHE_NAME = 'momoblog-shell-v1'
+// 每次发布更新版本号，激活时清理旧壳资源，避免用户长期拿到旧 chunk。
+const CACHE_NAME = 'momoblog-shell-v2'
 const APP_SHELL = ['/', '/index.html', '/manifest.webmanifest', '/pwa-192.svg', '/pwa-512.svg']
 
 self.addEventListener('install', (event) => {
@@ -13,6 +14,10 @@ self.addEventListener('activate', (event) => {
       .then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))))
   )
   self.clients.claim()
+})
+
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SKIP_WAITING') self.skipWaiting()
 })
 
 self.addEventListener('fetch', (event) => {

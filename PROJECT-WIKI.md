@@ -94,10 +94,10 @@ SQLite 存在单文件写锁，PM2 配置已明确指定 `instances: 1`。不要
 - 首页支持关键字搜索、最新/最热排序、全量/本周热门标签以及登录后的关注流。
 - 动态支持文本、Markdown 安全渲染、最多 9 张图片、最多 9 个视频、标签、点赞、评论预览与管理员编辑/删除。
 - 访客评论必须提供昵称；未审核内容对访客显示脱敏占位文本，管理员可审核、拒绝或删除。
-- 个人主页支持封面、头像、签名、背景图、背景音乐、暗黑模式和关注关系。
+- 个人主页支持封面、头像、签名、背景图、封面视频、背景音乐、暗黑模式和关注关系；封面视频支持 mp4 / webm，失败时回退到图片或主题背景。
 - 前端本地保存收藏、浏览历史、发布草稿、主题、游客身份与游客昵称，不会同步到后端。
-- 天气组件会申请定位，再调用 BigDataCloud 逆地理编码和 Open-Meteo；数据在本地缓存 30 分钟。此功能依赖浏览器定位权限，生产环境应使用 HTTPS。
-- 生产构建会提供 PWA manifest、192/512 图标和 Service Worker；Service Worker 只在生产环境注册，开发环境不会接管 Vite 资源。
+- 天气组件会申请定位，再调用 BigDataCloud 逆地理编码和 Open-Meteo；数据在本地缓存 30 分钟。定位或接口失败时保留“天气暂不可用 · 重试”入口，不会让工具栏空塌。此功能依赖浏览器定位权限，生产环境应使用 HTTPS。
+- 生产构建会提供 PWA manifest、192/512 图标和 Service Worker；Service Worker 只在生产环境注册，开发环境不会接管 Vite 资源。生产页面打开时会主动检查更新，并以版本化壳缓存和离线导航回退保证已访问资源可用。
 
 ## 4. 前端结构与状态流
 
@@ -153,7 +153,7 @@ momo-blog/src/
 
 | 表 | 核心字段 | 关系与用途 |
 | --- | --- | --- |
-| `users` | `username`、`password`、`nickname`、`avatar`、`signature`、`bgImage`、`bgMusic` | 管理员账户与个人主页资料；密码只保存 bcrypt 哈希 |
+| `users` | `username`、`password`、`nickname`、`avatar`、`signature`、`bgImage`、`bgVideo`、`bgMusic` | 管理员账户与个人主页资料；密码只保存 bcrypt 哈希；封面视频使用同源媒体地址 |
 | `posts` | `userId`、`content`、`images`、`videos`、`music`、`tags`、`likeCount`、`commentCount` | 动态主表；数组字段使用 TypeORM `simple-array` 存储 |
 | `comments` | `postId`、`userId`、`visitorId`、`nickname`、`content`、`status`、回复字段 | 评论状态为 `pending`、`approved`、`rejected` |
 | `likes` | `userId`、`visitorId`、`postId` | `(userId, postId)` 与 `(visitorId, postId)` 唯一，防止重复点赞 |
@@ -161,7 +161,7 @@ momo-blog/src/
 | `notifications` | `receiverId`、`senderId`、`type`、`postId`、`content`、`dedupeKey`、`isRead` | 点赞、评论、回复通知；`dedupeKey` 用于同一事件去重 |
 | `post_revisions` | `postId`、`editorId`、`content`、`images`、`videos`、`music`、`tags`、`createdAt` | 动态编辑前的完整快照，可恢复为历史版本 |
 
-生产模式下 `TypeORM` 会关闭 `synchronize`，并在启动时自动执行 `src/migrations/` 中的迁移；开发模式会启用 `synchronize`。阶段 6 新增 `1786600000000-AddPostRevisions` 和 `1786601000000-AddNotificationDedupeKey`；实体变更必须同步补充可回放的迁移，不要依赖生产自动同步表结构。
+生产模式下 `TypeORM` 会关闭 `synchronize`，并在启动时自动执行 `src/migrations/` 中的迁移；开发模式会启用 `synchronize`。阶段 6 新增 `1786600000000-AddPostRevisions`、`1786601000000-AddNotificationDedupeKey` 和 `1786602000000-AddUserBgVideo`；实体变更必须同步补充可回放的迁移，不要依赖生产自动同步表结构。
 
 ## 6. REST API 速查
 
@@ -175,7 +175,7 @@ momo-blog/src/
 | `GET` | `/api/users/owner` | 公开 | 获取管理员公开资料，不返回密码 |
 | `GET` | `/api/users/me` | JWT | 当前用户资料 |
 | `GET` | `/api/users/:id` | 可选 JWT | 用户资料、动态数、粉丝数、关注数、当前用户是否关注 |
-| `PUT` | `/api/users/profile` | JWT | 更新昵称、头像、签名；背景图/背景音乐只允许管理员 |
+| `PUT` | `/api/users/profile` | JWT | 更新昵称、头像、签名；背景图/封面视频/背景音乐只允许管理员 |
 | `GET` | `/api/users/:id/posts` | 公开 | 指定用户动态分页 |
 
 ### 动态、点赞与标签
@@ -216,7 +216,7 @@ momo-blog/src/
 | 方法 | 地址 | 鉴权 | 说明 |
 | --- | --- | --- | --- |
 | `POST` | `/api/upload` | JWT + 管理员 | 字段 `files`，1–9 张图片；每张 ≤ 5 MB，总量 ≤ 30 MB |
-| `POST` | `/api/upload/video` | JWT + 管理员 | 字段 `file`，仅 MP4/WebM，≤ 50 MB |
+| `POST` | `/api/upload/video` | JWT + 管理员 | 字段 `file`，仅 MP4/WebM，≤ 50 MB；首页/个人主页封面视频也使用此接口 |
 | `POST` | `/api/upload/audio` | JWT + 管理员 | 字段 `file`，支持 MP3/WAV/OGG/AAC/M4A/FLAC/WebM，≤ 20 MB |
 | `GET` | `/api/og/post/:id` | 公开 | 带 Open Graph 元数据的分享 HTML |
 | `GET` | `/api/health` | 公开 | 执行 `SELECT 1`，返回服务状态、时间戳、运行时间 |
@@ -240,7 +240,7 @@ UPLOAD_DIR/
     ├── orig.webp / orig.gif      # 原始显示图
     ├── mid.webp                  # 最大宽度 750px
     ├── thumb.webp                # 最大宽度 320px
-    ├── video.mp4 | video.webm
+    ├── video.mp4 | video.webm     # 动态视频或个人主页封面视频
     └── <安全化原文件名>.<音频扩展名>
 ```
 
@@ -346,7 +346,7 @@ Compose 的 backend 已配置 `/api/health` 健康检查，并要求 frontend �
 | 已处理 | Docker Compose 曾将 `3001:3001` 暴露到宿主机，而部署基线要求后端不对外暴露 | API 可绕开前端 Nginx 直接访问 | 已改为默认 `127.0.0.1:${BACKEND_HOST_PORT:-3001}:3001`；仅在确认额外边界后调整 |
 | 已处理 | 公开快照包含两个重复的初始化 migration，空库执行会在第二个 migration 创建已存在的 `comments` 表并失败 | 生产首次部署可能在迁移阶段失败 | 重复 migration 已改为兼容性 no-op；在内存 SQLite 空库和临时生产容器上验证三条 migration 可完整回放 |
 | 已处理 | Compose 只按容器启动顺序启动 frontend，健康接口即使数据库查询失败也返回 HTTP 200 | 迁移失败或数据库锁定时可能被误判为已部署 | backend 增加 healthcheck，frontend 等待 `service_healthy`；数据库异常返回 HTTP 503 |
-| 已处理 | `cleanup-images.sh` 只收集 `posts.images` 与 `users.avatar` 的引用 | 视频、动态配乐、背景图、背景音乐等仍在使用的文件可能被误删 | 已扩展到 videos/music/avatar/bgImage/bgMusic，并保持默认只报告模式 |
+| 已处理 | `cleanup-images.sh` 只收集 `posts.images` 与 `users.avatar` 的引用 | 视频、动态配乐、图片/视频封面、背景音乐等仍在使用的文件可能被误删 | 已扩展到 videos/music/avatar/bgImage/bgVideo/bgMusic，并保持默认只报告模式 |
 | 已处理 | 首页动态列表逐条查询评论、点赞状态和点赞用户，页面动态数量增加时查询次数线性增长 | 数据量增大后首页响应时间和数据库负载上升 | 已按当前页批量读取关联数据；已加入脱敏内存数据集基准，真实服务器延迟仍待测量 |
 | 已处理 | posts、comments、notifications 高频过滤/排序字段缺少专用索引 | 数据量增长后列表、审核和未读数查询需要更多扫描 | 已新增索引 migration，并在临时 SQLite 和查询基准中验证使用情况 |
 | 已处理 | 点赞记录和 posts.likeCount 原先不在同一个事务管理器中更新 | 并发或异常时可能出现点赞记录与计数不一致 | 已统一使用同一个 QueryRunner 事务更新记录和计数，并补充新增、取消和回滚测试 |

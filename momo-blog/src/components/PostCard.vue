@@ -208,6 +208,7 @@ async function handleMenuSelect(action) {
   border: 1px solid var(--border-light);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-card);
+  overflow: hidden;
 }
 
 .post-header {
@@ -260,6 +261,7 @@ async function handleMenuSelect(action) {
   line-height: 1.7;
   color: var(--text-primary);
   word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .content-text.collapsed {
@@ -322,6 +324,7 @@ async function handleMenuSelect(action) {
   padding: 5px 8px;
   border-radius: 4px;
   user-select: none;
+  min-height: 36px;
 }
 
 .action-text {
@@ -394,5 +397,47 @@ async function handleMenuSelect(action) {
   font-size: 13px;
   margin-top: 6px;
   cursor: pointer;
+}
+
+@media (max-width: 480px) {
+  .post-card {
+    margin: 8px 8px 0;
+    padding: 13px 12px 11px;
+    border-radius: 11px;
+  }
+
+  .post-header {
+    gap: 9px;
+    margin-bottom: 10px;
+  }
+
+  .post-content {
+    margin-bottom: 9px;
+  }
+
+  .content-text {
+    font-size: 15px;
+    line-height: 1.65;
+  }
+
+  .post-actions {
+    gap: 4px;
+    padding-top: 8px;
+  }
+
+  .action-item {
+    min-height: 40px;
+    padding: 7px 9px;
+  }
+
+  .tag-chip {
+    min-height: 30px;
+    padding: 6px 9px;
+  }
+
+  .comment-preview {
+    margin-top: 6px;
+    padding: 8px 9px;
+  }
 }
 </style>

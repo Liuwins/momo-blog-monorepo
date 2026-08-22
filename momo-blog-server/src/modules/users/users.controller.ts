@@ -35,9 +35,9 @@ export class UsersController {
   @Put('profile')
   @UseGuards(JwtAuthGuard)
   updateProfile(@Request() req, @Body() dto: UpdateProfileDto) {
-    // 封面图与背景音乐仅管理员可设置，访客/普通账号无编辑权限
+    // 封面图、封面视频与背景音乐仅管理员可设置，访客/普通账号无编辑权限
     if (
-      (dto.bgImage !== undefined || dto.bgMusic !== undefined) &&
+      (dto.bgImage !== undefined || dto.bgVideo !== undefined || dto.bgMusic !== undefined) &&
       req.user.username !== getAdminUsername()
     ) {
       throw new ForbiddenException('封面与背景音乐仅管理员可设置');
