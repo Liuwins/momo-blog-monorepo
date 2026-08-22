@@ -1,6 +1,6 @@
 # MomoBlog 当前部署基线
 
-状态：当前仓库的唯一部署参考。本文依据 `momo-blog/`、`momo-blog-server/`、Dockerfile、Compose 和 Nginx 配置整理；域名、服务器路径、证书和凭据仍需按目标环境填写。
+状态：当前仓库的部署基线。本文依据 `momo-blog/`、`momo-blog-server/`、Dockerfile、Compose 和 Nginx 配置整理；域名、服务器路径、证书和凭据仍需按目标环境填写。需要交给 AI 或其他开发者执行完整上线时，请先阅读 [`AI-DEPLOYMENT-GUIDE.md`](AI-DEPLOYMENT-GUIDE.md)。
 
 ## 1. 运行拓扑
 

@@ -16,6 +16,7 @@ MomoBlog 是一个移动端优先、朋友圈风格的个人动态博客。它�
 ├── momo-blog/                 # Vue 3 前端
 ├── momo-blog-server/          # NestJS 后端
 ├── docs/DEPLOYMENT.md         # 当前部署基线
+├── docs/AI-DEPLOYMENT-GUIDE.md # AI 辅助生产上线操作手册
 ├── docs/PRODUCTION-ACCEPTANCE.md # 真实环境脱敏验收模板
 ├── ROADMAP.md                 # 当前路线图
 └── PROJECT-WIKI.md            # 本文
@@ -28,6 +29,11 @@ MomoBlog 是一个移动端优先、朋友圈风格的个人动态博客。它�
 | Monorepo 根 | `master` | 当前包含阶段 1–7 优化；NestJS 11 升级、路由懒加载重试、媒体引用、资源 ID 校验和运维加固已通过本地回归、隔离 Compose 和 GitHub Actions；最新回归运行 `32513167999` 成功 |
 | 前端导入基线 | `legacy/frontend-master-20260821` | `425f812`（2026-08-12）；远程旧仓库仍公开且未归档，README 迁移链接待确认 |
 | 后端导入基线 | `legacy/server-master-20260821` | `d60173c`（2026-08-12）；远程旧仓库仍公开且未归档，README 迁移链接待确认 |
+
+### 部署入口
+
+- 日常部署基线见 [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)。
+- 需要交给其他开发者或 AI 执行生产上线时，使用 [`docs/AI-DEPLOYMENT-GUIDE.md`](docs/AI-DEPLOYMENT-GUIDE.md)，其中包含版本固定、HTTPS、首次账号初始化、验收、备份、回滚和 AI 安全边界。
 
 ### 总体架构
 
