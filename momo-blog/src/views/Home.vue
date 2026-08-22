@@ -698,9 +698,9 @@ async function handleRejectComment(comment) {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  /* 为右下角重叠的头像预留空间 */
+  /* 为右下角重叠的头像预留空间；头像需要超出封面底边完整显示 */
   margin-bottom: 34px;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .moments-cover-video,
